@@ -7,10 +7,13 @@ The application does **not** re-implement business logic. It connects to an exis
 The full rental lifecycle has been tested end to end:
 **customer → booking → vehicle assignment → return → invoice → payment**.
 
+![Dashboard](docs/app/dashboard.png)
+
 ---
 
 ## Table of contents
 
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
@@ -27,6 +30,25 @@ The full rental lifecycle has been tested end to end:
 - [Internationalisation (EN / FR)](#internationalisation-en--fr)
 - [Excel BI export](#excel-bi-export)
 - [Troubleshooting](#troubleshooting)
+
+---
+
+## Screenshots
+
+| | |
+|---|---|
+| **Bookings:** full list with status and actions<br>![Bookings](docs/app/bookings.png) | **Confirm a booking:** assign a vehicle and staff member (`sp_confirm_booking`)<br>![Confirm booking](docs/app/booking_confirm.png) |
+| **Process a return:** odometer and damage inspection (`sp_process_return`)<br>![Process return](docs/app/agreement_return.png) | **Invoice:** rental fee, late-return penalty and payments (`sp_generate_invoice`)<br>![Invoice](docs/app/invoice.png) |
+| **Customers:** individual and corporate accounts<br>![Customers](docs/app/customers.png) | **New customer:** registration form<br>![New customer](docs/app/customer_new.png) |
+| **Vehicles:** real-time availability by branch<br>![Vehicles](docs/app/vehicles.png) | **Agreements:** active, overdue and closed rentals<br>![Agreements](docs/app/agreements.png) |
+| **New booking**<br>![New booking](docs/app/booking_new.png) | **French interface:** the whole UI switches with one click<br>![Dashboard in French](docs/app/dashboard_fr.png) |
+
+<details>
+<summary><b>Reports page</b> (fleet utilisation, revenue, overdue returns, outstanding balances)</summary>
+
+![Reports](docs/app/reports.png)
+
+</details>
 
 ---
 
@@ -74,6 +96,7 @@ VRMS_WebApp/
 ├── public/style.css     # Stylesheet
 ├── sql/                 # Database scripts (schema, triggers, views, sample data, demos)
 ├── docs/
+│   ├── app/             # Web app screenshots
 │   ├── diagrams/        # ERD (PNG + Mermaid source)
 │   └── screenshots/     # pgAdmin execution screenshots for each SQL script
 ├── .env.example         # Configuration template
