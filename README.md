@@ -16,6 +16,8 @@ The full rental lifecycle has been tested end to end:
 - [Project structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Database setup](#database-setup)
+  - [Entity-relationship diagram](#entity-relationship-diagram)
+  - [Execution screenshots](#execution-screenshots)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Running the app](#running-the-app)
@@ -71,6 +73,9 @@ VRMS_WebApp/
 ├── views/               # EJS templates (one folder per section + shared layout)
 ├── public/style.css     # Stylesheet
 ├── sql/                 # Database scripts (schema, triggers, views, sample data, demos)
+├── docs/
+│   ├── diagrams/        # ERD (PNG + Mermaid source)
+│   └── screenshots/     # pgAdmin execution screenshots for each SQL script
 ├── .env.example         # Configuration template
 └── package.json
 ```
@@ -112,6 +117,35 @@ psql -U postgres -d swiftdrive_vrms -f sql/05_sample_data.sql
 **Using pgAdmin:** create a database named `swiftdrive_vrms`, open the *Query Tool* on it, then open and execute each script in order.
 
 > Sample-data dates are relative to `CURRENT_DATE`, so the reports stay meaningful whenever the scripts are run.
+
+### Entity-relationship diagram
+
+![SwiftDrive VRMS entity-relationship diagram](docs/diagrams/erd.png)
+
+The Mermaid source is in [`docs/diagrams/erd.mmd`](docs/diagrams/erd.mmd) and can be edited at <https://mermaid.live>.
+
+### Execution screenshots
+
+Each script was executed in pgAdmin 4 against PostgreSQL 14:
+
+| Script | Result |
+|---|---|
+| `01_schema.sql` | [Tables, keys and indexes created](docs/screenshots/01_schema.png) |
+| `02_sequences.sql` | [Sequences created (booking references start at 5000)](docs/screenshots/02_sequences.png) |
+| `03_functions_triggers.sql` | [Triggers and stored procedures created](docs/screenshots/03_functions_triggers.png) |
+| `04_views.sql` | [Views and role grants created](docs/screenshots/04_views.png) |
+| `05_sample_data.sql` | [Full rental lifecycle: bookings confirmed, returns, invoices with late fees](docs/screenshots/05_sample_data.png) |
+| `06_business_rule_demo.sql` | [Every business rule rejects invalid operations](docs/screenshots/06_business_rule_demo.png) |
+| `07_transactions_acid_demo.sql` | [Invalid payment rejected by a CHECK constraint](docs/screenshots/07_transactions_acid_demo.png) and [payment count checked afterwards](docs/screenshots/07_transaction_rollback_check.png) |
+| `08_data_quality_checks.sql` | [Data quality audit queries](docs/screenshots/08_data_quality_checks.png) |
+| `09_reports_and_queries.sql` | [Outstanding balances report](docs/screenshots/09_reports_and_queries.png) |
+
+<details>
+<summary>Business rule enforcement (06_business_rule_demo.sql)</summary>
+
+![Business rule demo output](docs/screenshots/06_business_rule_demo.png)
+
+</details>
 
 ## Installation
 

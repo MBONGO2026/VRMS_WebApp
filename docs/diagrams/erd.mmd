@@ -1,0 +1,120 @@
+erDiagram
+    BRANCH {
+        int BranchID PK
+        string BranchName
+        string City
+        boolean IsHeadOffice
+    }
+    VEHICLECATEGORY {
+        int CategoryID PK
+        string CategoryName
+        numeric DailyRate
+        numeric DepositAmount
+    }
+    VEHICLE {
+        int VehicleID PK
+        string RegistrationNumber
+        int CategoryID FK
+        int BranchID FK
+        string Status
+        int Odometer
+    }
+    CUSTOMER {
+        int CustomerID PK
+        string CustomerType
+        string Email
+        string Phone
+    }
+    INDIVIDUALCUSTOMER {
+        int CustomerID PK
+        string FirstName
+        string LastName
+        string DriverLicenseNumber
+    }
+    CORPORATECUSTOMER {
+        int CustomerID PK
+        string CompanyName
+        numeric CreditLimit
+    }
+    AUTHORIZEDDRIVER {
+        int DriverID PK
+        int CustomerID FK
+        string FullName
+    }
+    STAFF {
+        int StaffID PK
+        int BranchID FK
+        string FullName
+        string JobRole
+    }
+    APPROLE {
+        int RoleID PK
+        string RoleName
+    }
+    APPUSER {
+        int UserID PK
+        int StaffID FK
+        int RoleID FK
+        string Username
+    }
+    BOOKING {
+        int BookingID PK
+        int CustomerID FK
+        int CategoryID FK
+        int BranchID FK
+        date PickupDate
+        date ReturnDateExpected
+        string BookingStatus
+    }
+    RENTALAGREEMENT {
+        int AgreementID PK
+        int BookingID FK
+        int VehicleID FK
+        int StaffID FK
+        date ActualPickupDate
+        date ActualReturnDate
+        string AgreementStatus
+    }
+    VEHICLEINSPECTION {
+        int InspectionID PK
+        int AgreementID FK
+        string InspectionType
+        boolean DamageFound
+    }
+    PAYMENT {
+        int PaymentID PK
+        int AgreementID FK
+        numeric Amount
+        string PaymentType
+    }
+    INVOICE {
+        int InvoiceID PK
+        int AgreementID FK
+        numeric TotalAmount
+        string InvoiceStatus
+    }
+    INVOICELINE {
+        int InvoiceLineID PK
+        int InvoiceID FK
+        string Description
+        numeric Amount
+    }
+
+    BRANCH ||--o{ VEHICLE : houses
+    BRANCH ||--o{ STAFF : employs
+    BRANCH ||--o{ BOOKING : "is pickup point for"
+    VEHICLECATEGORY ||--o{ VEHICLE : classifies
+    VEHICLECATEGORY ||--o{ BOOKING : "is requested in"
+    CUSTOMER ||--o| INDIVIDUALCUSTOMER : "is a"
+    CUSTOMER ||--o| CORPORATECUSTOMER : "is a"
+    CORPORATECUSTOMER ||--o{ AUTHORIZEDDRIVER : nominates
+    CUSTOMER ||--o{ BOOKING : places
+    BOOKING ||--o| RENTALAGREEMENT : "is confirmed into"
+    VEHICLE ||--o{ RENTALAGREEMENT : "is assigned on"
+    STAFF ||--o{ RENTALAGREEMENT : processes
+    RENTALAGREEMENT ||--o{ VEHICLEINSPECTION : "is inspected via"
+    RENTALAGREEMENT ||--o{ PAYMENT : receives
+    RENTALAGREEMENT ||--o| INVOICE : "is billed via"
+    INVOICE ||--o{ INVOICELINE : itemises
+    STAFF ||--o| APPUSER : "logs in as"
+    APPROLE ||--o{ APPUSER : grants
