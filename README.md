@@ -15,6 +15,7 @@ The full rental lifecycle has been tested end to end:
 - [Tech stack](#tech-stack)
 - [Project structure](#project-structure)
 - [Prerequisites](#prerequisites)
+- [Database setup](#database-setup)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Running the app](#running-the-app)
@@ -69,6 +70,7 @@ VRMS_WebApp/
 │   └── reports.js       # /reports and Excel export
 ├── views/               # EJS templates (one folder per section + shared layout)
 ├── public/style.css     # Stylesheet
+├── sql/                 # Database scripts (schema, triggers, views, sample data, demos)
 ├── .env.example         # Configuration template
 └── package.json
 ```
@@ -76,9 +78,40 @@ VRMS_WebApp/
 ## Prerequisites
 
 1. **Node.js** (LTS version recommended): <https://nodejs.org>
-2. **PostgreSQL** with the `swiftdrive_vrms` database already created and the nine SQL scripts (`01_schema.sql` through `09_reports_and_queries.sql`) executed against it. The app uses this database as-is and does not create or migrate anything.
+2. **PostgreSQL** (with pgAdmin or the `psql` command-line client).
 
-> The SQL scripts are part of the course submission and are not included in this repository.
+## Database setup
+
+The app uses the `swiftdrive_vrms` database as-is and does not create or migrate anything, so the database must be set up first with the scripts in [`sql/`](sql/). Run them **in order**:
+
+| Script | Contents |
+|---|---|
+| `01_schema.sql` | Tables, primary/foreign keys and CHECK constraints |
+| `02_sequences.sql` | Sequences (e.g. booking reference numbers) |
+| `03_functions_triggers.sql` | Functions, triggers and the stored procedures `sp_confirm_booking`, `sp_process_return`, `sp_generate_invoice` |
+| `04_views.sql` | Reporting views and role-based access control (GRANT / REVOKE) |
+| `05_sample_data.sql` | Fictional sample data: branches, fleet, customers, staff and rental scenarios |
+| `06_business_rule_demo.sql` | Demonstrates each business rule being enforced |
+| `07_transactions_acid_demo.sql` | Transaction / ACID demonstrations |
+| `08_data_quality_checks.sql` | Data quality checks |
+| `09_reports_and_queries.sql` | Report queries |
+
+Scripts `01`–`05` are required for the app to work. Scripts `06`–`09` are demonstrations and checks and are optional.
+
+**Using `psql`:**
+
+```bash
+createdb -U postgres swiftdrive_vrms
+psql -U postgres -d swiftdrive_vrms -f sql/01_schema.sql
+psql -U postgres -d swiftdrive_vrms -f sql/02_sequences.sql
+psql -U postgres -d swiftdrive_vrms -f sql/03_functions_triggers.sql
+psql -U postgres -d swiftdrive_vrms -f sql/04_views.sql
+psql -U postgres -d swiftdrive_vrms -f sql/05_sample_data.sql
+```
+
+**Using pgAdmin:** create a database named `swiftdrive_vrms`, open the *Query Tool* on it, then open and execute each script in order.
+
+> Sample-data dates are relative to `CURRENT_DATE`, so the reports stay meaningful whenever the scripts are run.
 
 ## Installation
 
@@ -190,7 +223,7 @@ It uses the same queries as the Reports page, so the figures always match what y
 |---|---|
 | `ECONNREFUSED` / "connection refused" | PostgreSQL is not running, or `PGHOST` / `PGPORT` in `.env` are wrong. |
 | "password authentication failed" | `PGPASSWORD` does not match the password for `PGUSER`. |
-| "database swiftdrive_vrms does not exist" | Create the database and run the nine SQL scripts first. |
-| "relation vw_... does not exist" | Some SQL scripts (for example, the views in `04_views.sql`) were not executed. |
+| "database swiftdrive_vrms does not exist" | Create the database and run the SQL scripts first (see [Database setup](#database-setup)). |
+| "relation vw_... does not exist" | Some SQL scripts (for example, the views in `sql/04_views.sql`) were not executed. |
 | A constraint error shown in a form (e.g. *violates check constraint*) | Not an app bug: the database is enforcing an integrity or business rule. Correct the input and try again. |
 | Port 3000 already in use | Set a different `PORT` in `.env`. |
