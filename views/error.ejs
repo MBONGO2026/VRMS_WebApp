@@ -1,0 +1,6 @@
+<div class="card">
+  <h2><%= t('error.heading') %></h2>
+  <p class="flash error"><%= message %></p>
+  <% if (detail) { %><p class="muted mono"><%= detail %></p><% } %>
+  <p><a href="javascript:history.back()" class="btn ghost"><%= t('common.back') %></a></p>
+</div>

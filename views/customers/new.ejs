@@ -1,0 +1,99 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('customers.new.title') %></h1>
+    <p class="subtitle"><%= t('customers.new.subtitle') %></p>
+  </div>
+</div>
+
+<div class="card">
+  <% if (error) { %><div class="flash error"><%= error %></div><% } %>
+
+  <form class="stack" method="POST" action="/customers">
+    <div class="field">
+      <label><%= t('customers.new.customerType') %></label>
+      <div class="form-row">
+        <label class="field inline"><input type="radio" name="customerType" value="Individual" onchange="toggleType()" checked style="width:auto"> <%= t('common.individual') %></label>
+        <label class="field inline"><input type="radio" name="customerType" value="Corporate" onchange="toggleType()" style="width:auto"> <%= t('common.corporate') %></label>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label><%= t('customers.new.email') %></label>
+        <input type="email" name="email" required value="<%= form.email || '' %>">
+      </div>
+      <div class="field">
+        <label><%= t('customers.new.phone') %></label>
+        <input type="text" name="phone" required placeholder="+264 81 000 0000" value="<%= form.phone || '' %>">
+      </div>
+    </div>
+    <div class="field">
+      <label><%= t('customers.new.address') %></label>
+      <input type="text" name="addressLine" required value="<%= form.addressLine || '' %>">
+    </div>
+
+    <div id="individualFields">
+      <div class="form-row">
+        <div class="field">
+          <label><%= t('customers.new.firstName') %></label>
+          <input type="text" name="firstName" value="<%= form.firstName || '' %>">
+        </div>
+        <div class="field">
+          <label><%= t('customers.new.lastName') %></label>
+          <input type="text" name="lastName" value="<%= form.lastName || '' %>">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label><%= t('customers.new.licenseNumber') %></label>
+          <input type="text" name="licenseNumber" value="<%= form.licenseNumber || '' %>">
+        </div>
+        <div class="field">
+          <label><%= t('customers.new.licenseExpiry') %></label>
+          <input type="date" name="licenseExpiry" value="<%= form.licenseExpiry || '' %>">
+        </div>
+        <div class="field">
+          <label><%= t('customers.new.dateOfBirth') %></label>
+          <input type="date" name="dateOfBirth" value="<%= form.dateOfBirth || '' %>">
+          <div class="hint"><%= t('customers.new.hintAge18') %></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="corporateFields" style="display:none">
+      <div class="form-row">
+        <div class="field">
+          <label><%= t('customers.new.companyName') %></label>
+          <input type="text" name="companyName" value="<%= form.companyName || '' %>">
+        </div>
+        <div class="field">
+          <label><%= t('customers.new.companyRegNumber') %></label>
+          <input type="text" name="companyRegNumber" value="<%= form.companyRegNumber || '' %>">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label><%= t('customers.new.contactPerson') %></label>
+          <input type="text" name="contactPersonName" value="<%= form.contactPersonName || '' %>">
+        </div>
+        <div class="field">
+          <label><%= t('customers.new.creditLimit') %></label>
+          <input type="number" step="0.01" min="0" name="creditLimit" value="<%= form.creditLimit || '0' %>">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <button type="submit" class="btn"><%= t('customers.new.save') %></button>
+      <a href="/customers" class="btn ghost"><%= t('common.cancel') %></a>
+    </div>
+  </form>
+</div>
+
+<script>
+  function toggleType() {
+    const type = document.querySelector('input[name="customerType"]:checked').value;
+    document.getElementById('individualFields').style.display = type === 'Individual' ? 'block' : 'none';
+    document.getElementById('corporateFields').style.display = type === 'Corporate' ? 'block' : 'none';
+  }
+</script>

@@ -1,0 +1,120 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('reports.title') %></h1>
+    <p class="subtitle"><%= t('reports.subtitle') %></p>
+  </div>
+  <a href="/reports/export.xlsx" class="btn"><%= t('reports.exportExcel') %></a>
+</div>
+
+<div class="card" id="fleet">
+  <h2><%= t('reports.fleetUtilization') %></h2>
+  <table>
+    <thead><tr><th><%= t('col.category') %></th><th><%= t('reports.colTotal') %></th><th><%= t('reports.colRented') %></th><th><%= t('reports.colAvailable') %></th><th><%= t('reports.colMaintenance') %></th><th><%= t('reports.colUtilization') %></th></tr></thead>
+    <tbody>
+      <% fleet.forEach(f => { %>
+      <tr>
+        <td><%= f.categoryname %></td>
+        <td><%= f.totalvehicles %></td>
+        <td><%= f.vehiclesrented %></td>
+        <td><%= f.vehiclesavailable %></td>
+        <td><%= f.vehiclesinmaintenance %></td>
+        <td><strong><%= f.utilizationpercent %>%</strong></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<div class="card" id="revenue">
+  <h2><%= t('reports.revenueByCategory') %></h2>
+  <table>
+    <thead><tr><th><%= t('col.category') %></th><th><%= t('reports.colInvoices') %></th><th class="right"><%= t('reports.colTotalRevenue') %></th><th class="right"><%= t('reports.colCollected') %></th><th class="right"><%= t('reports.colOutstanding') %></th></tr></thead>
+    <tbody>
+      <% revenue.forEach(r => { %>
+      <tr>
+        <td><%= r.categoryname %></td>
+        <td><%= r.invoicesissued %></td>
+        <td class="right">N$ <%= Number(r.totalrevenue).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></td>
+        <td class="right">N$ <%= Number(r.totalcollected).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></td>
+        <td class="right">N$ <%= Number(r.totaloutstanding).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<div class="grid cols-2">
+  <div class="card" id="overdue">
+    <h2><%= t('reports.overdueReturns') %></h2>
+    <% if (overdue.length === 0) { %>
+      <p class="empty"><%= t('reports.noOverdue') %></p>
+    <% } else { %>
+    <table>
+      <thead><tr><th><%= t('reports.colAgreement') %></th><th><%= t('reports.colVehicle') %></th><th><%= t('col.customer') %></th><th><%= t('reports.colReturnDue') %></th><th><%= t('reports.colOverdue') %></th></tr></thead>
+      <tbody>
+        <% overdue.forEach(o => { %>
+        <tr>
+          <td>#<%= o.agreementid %></td>
+          <td><%= o.registrationnumber %></td>
+          <td><%= o.customername %></td>
+          <td><%= new Date(o.returndateexpected).toLocaleDateString(dateLocale) %></td>
+          <td><span class="badge red"><%= t('reports.overdueDays', { n: o.daysoverdue }) %></span></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+
+  <div class="card" id="today">
+    <h2><%= t('reports.todaysBookings') %></h2>
+    <% if (today.length === 0) { %>
+      <p class="empty"><%= t('reports.noToday') %></p>
+    <% } else { %>
+    <table>
+      <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th></tr></thead>
+      <tbody>
+        <% today.forEach(t2 => { %>
+        <tr>
+          <td>#<%= t2.bookingid %></td>
+          <td><%= t2.customername %></td>
+          <td><%= t2.categoryname %></td>
+          <td><%= t2.branchname %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2><%= t('reports.bookingsByCategory') %></h2>
+    <table>
+      <thead><tr><th><%= t('col.category') %></th><th><%= t('reports.colTotalBookings') %></th></tr></thead>
+      <tbody>
+        <% byCategory.forEach(b => { %>
+          <tr><td><%= b.categoryname %></td><td><%= b.totalbookings %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><%= t('reports.outstandingBalances') %></h2>
+    <% if (outstanding.length === 0) { %>
+      <p class="empty"><%= t('reports.noOutstanding') %></p>
+    <% } else { %>
+    <table>
+      <thead><tr><th><%= t('col.customer') %></th><th><%= t('reports.colInvoice') %></th><th class="right"><%= t('reports.colBalance') %></th></tr></thead>
+      <tbody>
+        <% outstanding.forEach(o => { %>
+          <tr><td><%= o.customername %></td><td>#<%= o.invoiceid %></td>
+              <td class="right">N$ <%= Number(o.balance).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>

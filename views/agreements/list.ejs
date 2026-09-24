@@ -1,0 +1,50 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('agreements.list.title') %></h1>
+    <p class="subtitle"><%= t('agreements.list.subtitle') %></p>
+  </div>
+</div>
+
+<div class="card">
+  <% if (agreements.length === 0) { %>
+    <p class="empty"><%= t('agreements.list.none') %></p>
+  <% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th><%= t('agreements.list.colAgreement') %></th><th><%= t('col.customer') %></th><th><%= t('agreements.list.colVehicle') %></th><th><%= t('agreements.list.colCheckedOut') %></th><th><%= t('col.returnExpected') %></th><th><%= t('agreements.list.colReturnedOn') %></th><th><%= t('col.status') %></th><th><%= t('agreements.list.colInvoice') %></th><th></th></tr></thead>
+      <tbody>
+        <% agreements.forEach(a => { %>
+        <tr>
+          <td>#<%= a.agreementid %></td>
+          <td><%= a.customername %></td>
+          <td><%= a.registrationnumber %></td>
+          <td><%= new Date(a.actualpickupdate).toLocaleDateString(dateLocale) %></td>
+          <td><%= new Date(a.returndateexpected).toLocaleDateString(dateLocale) %></td>
+          <td><%= a.actualreturndate ? new Date(a.actualreturndate).toLocaleDateString(dateLocale) : '—' %></td>
+          <td>
+            <% if (a.isoverdue) { %><span class="badge red"><%= t('agreements.list.statusOverdue') %></span>
+            <% } else if (a.agreementstatus === 'Active') { %><span class="badge amber"><%= t('agreements.list.statusActive') %></span>
+            <% } else { %><span class="badge green"><%= t('agreements.list.statusClosed') %></span><% } %>
+          </td>
+          <td>
+            <% if (a.invoiceid) { %>
+              <% const ic = { Paid: 'green', PartiallyPaid: 'amber', Unpaid: 'red' }[a.invoicestatus] || 'grey'; %>
+              <span class="badge <%= ic %>">#<%= a.invoiceid %> — <%= statusLabel('invoice', a.invoicestatus) %></span>
+            <% } else { %>
+              <span class="badge grey"><%= t('common.none') %></span>
+            <% } %>
+          </td>
+          <td>
+            <% if (a.agreementstatus === 'Active' && !a.actualreturndate) { %>
+              <a href="/agreements/<%= a.agreementid %>/return" class="btn small"><%= t('agreements.list.processReturn') %></a>
+            <% } else { %>
+              <a href="/agreements/<%= a.agreementid %>/invoice" class="btn small ghost"><%= a.invoiceid ? t('agreements.list.viewInvoice') : t('agreements.list.generateInvoice') %></a>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>

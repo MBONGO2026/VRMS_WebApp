@@ -1,0 +1,32 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('customers.list.title') %></h1>
+    <p class="subtitle"><%= customers.length %> <%= t('customers.list.subtitle') %></p>
+  </div>
+  <a href="/customers/new" class="btn"><%= t('customers.list.new') %></a>
+</div>
+
+<div class="card">
+  <% if (customers.length === 0) { %>
+    <p class="empty"><%= t('customers.list.none') %></p>
+  <% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th><%= t('customers.list.colId') %></th><th><%= t('customers.list.colType') %></th><th><%= t('customers.list.colName') %></th><th><%= t('customers.list.colEmail') %></th><th><%= t('customers.list.colPhone') %></th><th><%= t('customers.list.colRegistered') %></th><th><%= t('customers.list.colStatus') %></th></tr></thead>
+      <tbody>
+        <% customers.forEach(c => { %>
+        <tr>
+          <td>#<%= c.customerid %></td>
+          <td><span class="badge <%= c.customertype === 'Corporate' ? 'navy' : 'grey' %>"><%= c.customertype === 'Corporate' ? t('common.corporate') : t('common.individual') %></span></td>
+          <td><%= c.name %></td>
+          <td><%= c.email %></td>
+          <td><%= c.phone %></td>
+          <td><%= new Date(c.dateregistered).toLocaleDateString(dateLocale) %></td>
+          <td><% if (c.isblacklisted) { %><span class="badge red"><%= t('common.blacklisted') %></span><% } else { %><span class="badge green"><%= t('common.active') %></span><% } %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>

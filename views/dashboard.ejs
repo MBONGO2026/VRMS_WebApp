@@ -1,0 +1,77 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('dashboard.title') %></h1>
+    <p class="subtitle"><%= t('dashboard.subtitle') %></p>
+  </div>
+  <a href="/bookings/new" class="btn"><%= t('dashboard.newBooking') %></a>
+</div>
+
+<div class="grid cols-4">
+  <div class="stat">
+    <div class="value"><%= todayCount %></div>
+    <div class="label"><%= t('dashboard.statToday') %></div>
+  </div>
+  <div class="stat" style="border-left-color:#1F3864">
+    <div class="value"><%= utilization %>%</div>
+    <div class="label"><%= t('dashboard.statUtilization', { rented: fleet.rented, total: fleet.total }) %></div>
+  </div>
+  <div class="stat" style="border-left-color:<%= overdueCount > 0 ? '#B02A2A' : '#1E7E34' %>">
+    <div class="value"><%= overdueCount %></div>
+    <div class="label"><%= t('dashboard.statOverdue') %></div>
+  </div>
+  <div class="stat" style="border-left-color:#B8860B">
+    <div class="value">N$ <%= Number(outstanding).toLocaleString(dateLocale, {minimumFractionDigits: 2}) %></div>
+    <div class="label"><%= t('dashboard.statOutstanding') %></div>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2><%= t('dashboard.quickActions') %></h2>
+    <p style="display:flex; flex-direction:column; gap:10px;">
+      <a href="/customers/new" class="btn secondary"><%= t('dashboard.actionRegisterCustomer') %></a>
+      <a href="/bookings/new" class="btn"><%= t('dashboard.actionCreateBooking') %></a>
+      <a href="/bookings" class="btn ghost"><%= t('dashboard.actionConfirmAssign') %></a>
+      <a href="/agreements" class="btn ghost"><%= t('dashboard.actionProcessReturn') %></a>
+    </p>
+  </div>
+  <div class="card">
+    <h2><%= t('dashboard.fleetState') %></h2>
+    <div class="kv">
+      <dt><%= t('dashboard.fleetTotal') %></dt><dd><%= fleet.total %></dd>
+      <dt><%= t('dashboard.fleetRentedNow') %></dt><dd><%= fleet.rented %></dd>
+      <dt><%= t('dashboard.fleetAvailable') %></dt><dd><%= fleet.available %></dd>
+      <dt><%= t('dashboard.fleetMaintenance') %></dt><dd><%= fleet.maintenance %></dd>
+    </div>
+    <p style="margin-top:14px;"><a href="/reports#fleet" class="btn ghost small"><%= t('dashboard.viewFullReport') %></a></p>
+  </div>
+</div>
+
+<div class="card">
+  <h2><%= t('dashboard.recentBookings') %></h2>
+  <% if (recentBookings.length === 0) { %>
+    <p class="empty"><%= t('dashboard.noBookings') %></p>
+  <% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th><th><%= t('col.pickup') %></th><th><%= t('col.returnExpected') %></th><th><%= t('col.status') %></th></tr></thead>
+      <tbody>
+        <% recentBookings.forEach(b => { %>
+        <tr>
+          <td>#<%= b.bookingid %></td>
+          <td><%= b.customername %></td>
+          <td><%= b.categoryname %></td>
+          <td><%= b.branchname %></td>
+          <td><%= new Date(b.pickupdate).toLocaleDateString(dateLocale) %></td>
+          <td><%= new Date(b.returndateexpected).toLocaleDateString(dateLocale) %></td>
+          <td>
+            <% const statusColor = { Requested: 'grey', Confirmed: 'navy', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
+            <span class="badge <%= statusColor %>"><%= statusLabel('booking', b.bookingstatus) %></span>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>

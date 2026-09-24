@@ -1,0 +1,40 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('agreements.return.title') %> — <%= t('agreements.list.colAgreement') %> #<%= agreement.agreementid %></h1>
+    <p class="subtitle"><%= agreement.customername %> — <%= agreement.registrationnumber %></p>
+  </div>
+</div>
+
+<div class="card">
+  <% if (error) { %><div class="flash error"><%= error %></div><% } %>
+  <div class="kv" style="margin-bottom:18px;">
+    <dt><%= t('agreements.return.checkedOutOn') %></dt><dd><%= new Date(agreement.actualpickupdate).toLocaleDateString(dateLocale) %></dd>
+    <dt><%= t('agreements.return.odometerOut') %></dt><dd><%= Number(agreement.odometerout).toLocaleString(dateLocale) %> <%= t('common.km') %></dd>
+    <dt><%= t('agreements.return.odometerCurrent') %></dt><dd><%= Number(agreement.currentodometer).toLocaleString(dateLocale) %> <%= t('common.km') %></dd>
+  </div>
+
+  <form class="stack" method="POST" action="/agreements/<%= agreement.agreementid %>/return">
+    <div class="form-row">
+      <div class="field">
+        <label><%= t('agreements.return.returnDate') %></label>
+        <input type="date" name="returnDate" required value="<%= new Date().toISOString().slice(0,10) %>">
+      </div>
+      <div class="field">
+        <label><%= t('agreements.return.odometerIn') %></label>
+        <input type="number" name="odometerIn" required min="<%= agreement.odometerout %>">
+      </div>
+    </div>
+    <div class="field inline">
+      <input type="checkbox" name="damageFound" id="damageFound" style="width:auto">
+      <label for="damageFound" style="margin:0"><%= t('agreements.return.damageFound') %></label>
+    </div>
+    <div class="field">
+      <label><%= t('agreements.return.notes') %></label>
+      <textarea name="conditionNotes" rows="3" placeholder="<%= t('agreements.return.notesPlaceholder') %>"></textarea>
+    </div>
+    <div>
+      <button type="submit" class="btn"><%= t('agreements.return.save') %></button>
+      <a href="/agreements" class="btn ghost"><%= t('common.cancel') %></a>
+    </div>
+  </form>
+</div>

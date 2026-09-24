@@ -1,0 +1,98 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('agreements.invoice.title', { id: agreement.agreementid }) %></h1>
+    <p class="subtitle"><%= agreement.customername %> — <%= agreement.registrationnumber %></p>
+  </div>
+</div>
+
+<% if (error) { %><div class="flash error"><%= error %></div><% } %>
+
+<% if (!invoice) { %>
+  <div class="card">
+    <% if (!agreement.actualreturndate) { %>
+      <p class="empty"><%= t('agreements.invoice.mustReturnFirst') %></p>
+      <a href="/agreements/<%= agreement.agreementid %>/return" class="btn"><%= t('agreements.invoice.processReturnFirst') %></a>
+    <% } else { %>
+      <p><%= t('agreements.invoice.noneYet') %></p>
+      <form method="POST" action="/agreements/<%= agreement.agreementid %>/invoice/generate">
+        <button type="submit" class="btn"><%= t('agreements.invoice.generate') %></button>
+      </form>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="grid cols-2">
+    <div class="card">
+      <h2><%= t('agreements.invoice.header', { id: invoice.invoiceid }) %></h2>
+      <div class="kv">
+        <dt><%= t('agreements.invoice.date') %></dt><dd><%= new Date(invoice.invoicedate).toLocaleDateString(dateLocale) %></dd>
+        <dt><%= t('agreements.invoice.total') %></dt><dd>N$ <%= Number(invoice.totalamount).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></dd>
+        <dt><%= t('agreements.invoice.paid') %></dt><dd>N$ <%= Number(invoice.amountpaid).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></dd>
+        <dt><%= t('agreements.invoice.balance') %></dt><dd>N$ <%= (Number(invoice.totalamount) - Number(invoice.amountpaid)).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></dd>
+        <dt><%= t('agreements.invoice.status') %></dt><dd>
+          <% const ic = { Paid: 'green', PartiallyPaid: 'amber', Unpaid: 'red' }[invoice.invoicestatus] || 'grey'; %>
+          <span class="badge <%= ic %>"><%= statusLabel('invoice', invoice.invoicestatus) %></span>
+        </dd>
+      </div>
+
+      <h2 style="margin-top:20px;"><%= t('agreements.invoice.details') %></h2>
+      <table>
+        <thead><tr><th><%= t('agreements.invoice.colDescription') %></th><th class="right"><%= t('agreements.invoice.colAmount') %></th></tr></thead>
+        <tbody>
+          <% lines.forEach(l => { %>
+            <tr><td><%= l.description %></td><td class="right">N$ <%= Number(l.amount).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2><%= t('agreements.invoice.payments') %></h2>
+      <% if (payments.length === 0) { %>
+        <p class="empty"><%= t('agreements.invoice.noPayments') %></p>
+      <% } else { %>
+      <table>
+        <thead><tr><th><%= t('agreements.invoice.date') %></th><th><%= t('agreements.invoice.colType') %></th><th><%= t('agreements.invoice.colMethod') %></th><th class="right"><%= t('agreements.invoice.colAmount') %></th></tr></thead>
+        <tbody>
+          <% payments.forEach(p => { %>
+            <tr>
+              <td><%= new Date(p.paymentdate).toLocaleDateString(dateLocale) %></td>
+              <td><%= p.paymenttype %></td>
+              <td><%= p.paymentmethod %></td>
+              <td class="right">N$ <%= Number(p.amount).toLocaleString(dateLocale, {minimumFractionDigits:2}) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+
+      <% if (invoice.invoicestatus !== 'Paid') { %>
+      <h2 style="margin-top:20px;"><%= t('agreements.invoice.recordPayment') %></h2>
+      <form class="stack" method="POST" action="/agreements/<%= agreement.agreementid %>/payment">
+        <div class="form-row">
+          <div class="field">
+            <label><%= t('agreements.invoice.amount') %></label>
+            <input type="number" step="0.01" min="0.01" name="amount" required>
+          </div>
+          <div class="field">
+            <label><%= t('agreements.invoice.method') %></label>
+            <select name="method" required>
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="EFT">EFT</option>
+            </select>
+          </div>
+          <div class="field">
+            <label><%= t('agreements.invoice.type') %></label>
+            <select name="type" required>
+              <option value="RentalFee">RentalFee</option>
+              <option value="Penalty">Penalty</option>
+              <option value="Deposit">Deposit</option>
+            </select>
+          </div>
+        </div>
+        <div><button type="submit" class="btn"><%= t('agreements.invoice.recordBtn') %></button></div>
+      </form>
+      <% } %>
+    </div>
+  </div>
+<% } %>

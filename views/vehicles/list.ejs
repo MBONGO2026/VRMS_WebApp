@@ -1,0 +1,29 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('vehicles.list.title') %></h1>
+    <p class="subtitle"><%= t('vehicles.list.subtitle') %></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th><%= t('vehicles.list.colReg') %></th><th><%= t('vehicles.list.colCategory') %></th><th><%= t('vehicles.list.colMakeModel') %></th><th><%= t('vehicles.list.colBranch') %></th><th><%= t('vehicles.list.colOdometer') %></th><th><%= t('vehicles.list.colStatus') %></th></tr></thead>
+      <tbody>
+        <% vehicles.forEach(v => { %>
+        <tr>
+          <td><%= v.registrationnumber %></td>
+          <td><%= v.categoryname %></td>
+          <td><%= v.make %> <%= v.model %></td>
+          <td><%= v.branchname %></td>
+          <td><%= Number(v.odometer).toLocaleString(dateLocale) %> <%= t('common.km') %></td>
+          <td>
+            <% const c = { Available: 'green', Rented: 'amber', Maintenance: 'red', OutOfService: 'grey' }[v.status] || 'grey'; %>
+            <span class="badge <%= c %>"><%= statusLabel('vehicle', v.status) %></span>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>

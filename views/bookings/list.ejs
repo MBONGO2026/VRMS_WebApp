@@ -1,0 +1,43 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('bookings.list.title') %></h1>
+    <p class="subtitle"><%= t('bookings.list.subtitle') %></p>
+  </div>
+  <a href="/bookings/new" class="btn"><%= t('bookings.list.new') %></a>
+</div>
+
+<div class="card">
+  <% if (bookings.length === 0) { %>
+    <p class="empty"><%= t('bookings.list.none') %></p>
+  <% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th><th><%= t('col.pickup') %></th><th><%= t('col.returnExpected') %></th><th><%= t('col.status') %></th><th></th></tr></thead>
+      <tbody>
+        <% bookings.forEach(b => { %>
+        <tr>
+          <td>#<%= b.bookingid %></td>
+          <td><%= b.customername %></td>
+          <td><%= b.categoryname %></td>
+          <td><%= b.branchname %></td>
+          <td><%= new Date(b.pickupdate).toLocaleDateString(dateLocale) %></td>
+          <td><%= new Date(b.returndateexpected).toLocaleDateString(dateLocale) %></td>
+          <td>
+            <% const c = { Requested: 'grey', Confirmed: 'navy', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
+            <span class="badge <%= c %>"><%= statusLabel('booking', b.bookingstatus) %></span>
+          </td>
+          <td>
+            <% if (b.bookingstatus === 'Requested') { %>
+              <a href="/bookings/<%= b.bookingid %>/confirm" class="btn small"><%= t('bookings.list.assignVehicle') %></a>
+              <form method="POST" action="/bookings/<%= b.bookingid %>/cancel" style="display:inline" onsubmit="return confirm('<%= t('bookings.list.confirmCancel') %>')">
+                <button type="submit" class="btn small danger"><%= t('bookings.list.cancelBtn') %></button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>

@@ -1,0 +1,61 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('bookings.new.title') %></h1>
+    <p class="subtitle"><%= t('bookings.new.subtitle') %></p>
+  </div>
+</div>
+
+<div class="card">
+  <% if (error) { %><div class="flash error"><%= error %></div><% } %>
+  <form class="stack" method="POST" action="/bookings">
+    <div class="field">
+      <label><%= t('bookings.new.customer') %></label>
+      <select name="customerId" required>
+        <option value=""><%= t('common.select') %></option>
+        <% customers.forEach(c => { %>
+          <option value="<%= c.customerid %>" <%= String(form.customerId) === String(c.customerid) ? 'selected' : '' %>><%= c.name %> (#<%= c.customerid %>)</option>
+        <% }) %>
+      </select>
+      <div class="hint"><%= t('bookings.new.customerHintPrefix') %><a href="/customers/new"><%= t('bookings.new.customerHintLink') %></a>.</div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label><%= t('bookings.new.category') %></label>
+        <select name="categoryId" required>
+          <option value=""><%= t('common.select') %></option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat.categoryid %>" <%= String(form.categoryId) === String(cat.categoryid) ? 'selected' : '' %>>
+              <%= cat.categoryname %> — N$<%= cat.dailyrate %><%= t('common.perDay') %> (<%= t('common.deposit') %> N$<%= cat.depositamount %>)
+            </option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label><%= t('bookings.new.branch') %></label>
+        <select name="branchId" required>
+          <option value=""><%= t('common.select') %></option>
+          <% branches.forEach(br => { %>
+            <option value="<%= br.branchid %>" <%= String(form.branchId) === String(br.branchid) ? 'selected' : '' %>><%= br.branchname %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label><%= t('bookings.new.pickupDate') %></label>
+        <input type="date" name="pickupDate" required value="<%= form.pickupDate || '' %>">
+      </div>
+      <div class="field">
+        <label><%= t('bookings.new.returnDate') %></label>
+        <input type="date" name="returnDate" required value="<%= form.returnDate || '' %>">
+      </div>
+    </div>
+
+    <div>
+      <button type="submit" class="btn"><%= t('bookings.new.create') %></button>
+      <a href="/bookings" class="btn ghost"><%= t('common.cancel') %></a>
+    </div>
+  </form>
+</div>

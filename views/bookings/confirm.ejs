@@ -1,0 +1,61 @@
+<div class="page-header">
+  <div>
+    <h1><%= t('bookings.confirm.title', { id: booking.bookingid }) %></h1>
+    <p class="subtitle"><%= t('bookings.confirm.subtitle') %></p>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2><%= t('bookings.confirm.details') %></h2>
+    <div class="kv">
+      <dt><%= t('col.customer') %></dt><dd><%= booking.customername %></dd>
+      <dt><%= t('col.category') %></dt><dd><%= booking.categoryname %> (N$<%= booking.dailyrate %><%= t('common.perDay') %>)</dd>
+      <dt><%= t('col.branch') %></dt><dd><%= booking.branchname %></dd>
+      <dt><%= t('col.pickup') %></dt><dd><%= new Date(booking.pickupdate).toLocaleDateString(dateLocale) %></dd>
+      <dt><%= t('col.returnExpected') %></dt><dd><%= new Date(booking.returndateexpected).toLocaleDateString(dateLocale) %></dd>
+      <dt><%= t('bookings.confirm.priorRentals') %></dt><dd><%= booking.priorcompletedrentals %></dd>
+    </div>
+    <% if (Number(booking.priorcompletedrentals) === 0) { %>
+      <p class="flash error" style="margin-top:14px;"><%- t('bookings.confirm.firstTimeWarning', { amount: booking.depositamount }) %></p>
+    <% } else { %>
+      <p class="flash success" style="margin-top:14px;"><%= t('bookings.confirm.returningNote') %></p>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <h2><%= t('bookings.confirm.assignVehicle') %></h2>
+    <% if (error) { %><div class="flash error"><%= error %></div><% } %>
+    <% if (vehicles.length === 0) { %>
+      <p class="empty"><%= t('bookings.confirm.noVehicles', { category: booking.categoryname }) %></p>
+    <% } else { %>
+    <form class="stack" method="POST" action="/bookings/<%= booking.bookingid %>/confirm">
+      <div class="field">
+        <label><%= t('bookings.confirm.availableVehicle') %></label>
+        <select name="vehicleId" required>
+          <% vehicles.forEach(v => { %>
+            <option value="<%= v.vehicleid %>"><%= v.registrationnumber %> — <%= v.make %> <%= v.model %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label><%= t('bookings.confirm.staff') %></label>
+        <select name="staffId" required>
+          <% staff.forEach(s => { %>
+            <option value="<%= s.staffid %>"><%= s.fullname %> (<%= s.jobrole %>)</option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label><%= t('bookings.confirm.depositReceived') %></label>
+        <input type="number" step="0.01" min="0" name="deposit"
+               value="<%= Number(booking.priorcompletedrentals) === 0 ? booking.depositamount : '0' %>">
+      </div>
+      <div>
+        <button type="submit" class="btn"><%= t('bookings.confirm.confirmBtn') %></button>
+        <a href="/bookings" class="btn ghost"><%= t('common.back') %></a>
+      </div>
+    </form>
+    <% } %>
+  </div>
+</div>
