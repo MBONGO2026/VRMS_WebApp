@@ -1,55 +1,196 @@
-# VRMS Web App — SwiftDrive Vehicle Rentals
+# SwiftDrive VRMS — Vehicle Rental Management System (Web App)
 
-Interface web (formulaires + rapports) pour la base de données `swiftdrive_vrms` que tu as déjà créée et testée dans pgAdmin. Cette application ne remplace pas la base — elle se connecte simplement à ta base PostgreSQL existante et appelle les mêmes tables, vues, triggers et procédures stockées que tu as déjà validés (01_schema.sql → 09_reports_and_queries.sql).
+A bilingual (English / French) web front-end for the **SwiftDrive Vehicle Rentals** PostgreSQL database (`swiftdrive_vrms`), built for the *Database Development 2* course.
 
-Testée de bout en bout (client → réservation → assignation de véhicule → retour → facture → paiement) avant livraison.
+The application does **not** re-implement business logic. It connects to an existing PostgreSQL database and drives it through the database's own tables, views, triggers and stored procedures. Every business rule (no double-booking, mandatory deposit, automatic vehicle status updates, late-return penalties) is enforced by the database, and any violation is shown to the user with the exact PostgreSQL error message.
 
-**Bilingue FR / EN** : les boutons **FR / EN** en haut à droite changent la langue de toute l'interface (menus, formulaires, statuts, dates, montants). Le choix est mémorisé (cookie du navigateur) — pas besoin de le refaire à chaque page.
+The full rental lifecycle has been tested end to end:
+**customer → booking → vehicle assignment → return → invoice → payment**.
 
-## Installation (Windows)
+---
 
-1. **Installe Node.js** (si ce n'est pas déjà fait) : https://nodejs.org (version LTS).
-2. Décompresse ce dossier `vrms_webapp` quelque part, par exemple `C:\vrms_webapp`.
-3. Ouvre une invite de commande (PowerShell ou CMD) dans ce dossier, puis installe les dépendances :
-   ```
-   npm install
-   ```
-4. Copie `.env.example` vers `.env` :
-   ```
-   copy .env.example .env
-   ```
-5. Ouvre `.env` avec le Bloc-notes et remplace `your_postgres_password_here` par le mot de passe que tu utilises pour te connecter à `swiftdrive_vrms` dans pgAdmin (le même que pour l'utilisateur `postgres`). Vérifie aussi `PGPORT` (5432 par défaut) si tu utilises un port différent.
-6. Assure-toi que ta base `swiftdrive_vrms` existe déjà et que les 9 scripts SQL (01 à 09) y ont été exécutés — c'est elle que l'appli va utiliser telle quelle, sans rien recréer.
+## Table of contents
 
-## Lancer l'application
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the app](#running-the-app)
+- [Usage walkthrough](#usage-walkthrough)
+- [Routes](#routes)
+- [Database objects used](#database-objects-used)
+- [Internationalisation (EN / FR)](#internationalisation-en--fr)
+- [Excel BI export](#excel-bi-export)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Features
+
+| Section | What it does |
+|---|---|
+| **Dashboard** | Today's bookings, fleet utilisation (rented / available / in maintenance), overdue returns, total outstanding balance, and the most recent bookings. |
+| **Customers** | List all customers; register a new **individual** (driver's licence, date of birth) or **corporate** customer in a single transaction. |
+| **Vehicles** | Real-time availability by category and branch. |
+| **Bookings** | Create and cancel bookings; confirm a booking by assigning an available vehicle and an employee, which opens a rental agreement. |
+| **Agreements** | List rental agreements (overdue ones are flagged); process a vehicle return (return date, odometer, fuel level, condition). |
+| **Invoices & payments** | Generate the invoice for a completed agreement, view its details, and record payments until the balance is settled. |
+| **Reports** | Fleet utilisation, revenue by vehicle type, overdue returns, today's bookings, bookings per category, and outstanding customer balances. |
+| **Excel export** | One-click download of a BI workbook with KPI cards, native Excel charts, and filterable tables. |
+| **Bilingual UI** | Switch between English and French at any time; the choice is remembered. |
+
+## Tech stack
+
+- **Runtime:** Node.js
+- **Web framework:** Express 4
+- **Templating:** EJS + `express-ejs-layouts`
+- **Database driver:** `pg` (connection pool)
+- **Excel generation:** `exceljs` + `jszip` (native chart injection)
+- **Configuration:** `dotenv`
+
+## Project structure
 
 ```
+VRMS_WebApp/
+├── server.js            # Express app setup, language middleware, error handlers
+├── db.js                # Shared PostgreSQL connection pool
+├── i18n.js              # English / French translation dictionary and helpers
+├── lib/
+│   ├── excelReport.js   # Builds the BI Excel workbook
+│   └── xlsxCharts.js    # Injects native Excel charts into the workbook
+├── routes/
+│   ├── dashboard.js     # GET /
+│   ├── customers.js     # /customers
+│   ├── vehicles.js      # /vehicles
+│   ├── bookings.js      # /bookings
+│   ├── agreements.js    # /agreements (returns, invoices, payments)
+│   └── reports.js       # /reports and Excel export
+├── views/               # EJS templates (one folder per section + shared layout)
+├── public/style.css     # Stylesheet
+├── .env.example         # Configuration template
+└── package.json
+```
+
+## Prerequisites
+
+1. **Node.js** (LTS version recommended): <https://nodejs.org>
+2. **PostgreSQL** with the `swiftdrive_vrms` database already created and the nine SQL scripts (`01_schema.sql` through `09_reports_and_queries.sql`) executed against it. The app uses this database as-is and does not create or migrate anything.
+
+> The SQL scripts are part of the course submission and are not included in this repository.
+
+## Installation
+
+```bash
+git clone https://github.com/MBONGO2026/VRMS_WebApp.git
+cd VRMS_WebApp
+npm install
+```
+
+## Configuration
+
+Copy the example configuration file and fill in your own database credentials:
+
+```bash
+cp .env.example .env        # macOS / Linux / Git Bash
+copy .env.example .env      # Windows CMD
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `PGHOST` | `localhost` | PostgreSQL server host |
+| `PGPORT` | `5432` | PostgreSQL server port |
+| `PGDATABASE` | `swiftdrive_vrms` | Database name |
+| `PGUSER` | `postgres` | Database user |
+| `PGPASSWORD` | *(empty)* | Password for `PGUSER` (the one you use in pgAdmin) |
+| `PORT` | `3000` | Port the web app listens on |
+
+> `.env` contains your password and is excluded from Git via `.gitignore`. Never commit it.
+
+## Running the app
+
+```bash
 npm start
 ```
 
-Puis ouvre ton navigateur sur **http://localhost:3000**
+Then open **<http://localhost:3000>** in your browser. Stop the server with `Ctrl+C`.
 
-Pour arrêter : `Ctrl+C` dans l'invite de commande.
+## Usage walkthrough
 
-## Ce que l'application couvre
+A typical rental goes through these steps:
 
-| Section | Ce qu'elle fait | Objet SQL appelé |
+1. **Register a customer:** *Customers → New customer*. Choose *Individual* or *Corporate* and fill in the form.
+2. **Create a booking:** *Bookings → New booking*. Select the customer, vehicle category, branch, and pickup / return dates.
+3. **Confirm the booking:** from the booking list, click *Confirm*, then pick an available vehicle and the employee handling the rental. This calls `sp_confirm_booking`, which rejects double-bookings and checks the deposit, then opens a rental agreement.
+4. **Process the return:** *Agreements → Return*. Enter the return date, odometer reading, fuel level and condition. `sp_process_return` closes the agreement and updates the vehicle and booking statuses.
+5. **Invoice and payment:** *Agreements → Invoice → Generate invoice* (`sp_generate_invoice`, including any late penalty), then record one or more payments until the invoice is paid.
+6. **Review reports:** *Reports* shows the business reports, and *Export to Excel* downloads the BI workbook.
+
+## Routes
+
+| Method | Path | Description |
 |---|---|---|
-| Tableau de bord | Vue d'ensemble : réservations du jour, utilisation de la flotte, retards, solde impayé | vw_TodaysBookings, vw_FleetUtilization, vw_OverdueReturns, vw_RevenueByVehicleType |
-| Clients | Liste + formulaire d'enregistrement (individuel ou entreprise) | Customer, IndividualCustomer, CorporateCustomer |
-| Véhicules | Disponibilité en temps réel par catégorie/agence | vw_VehicleAvailability |
-| Réservations | Créer une réservation, l'annuler, l'assigner à un véhicule disponible | Booking, booking_ref_seq |
-| → Confirmer | Assigne un véhicule et un employé, ouvre le contrat | **sp_confirm_booking** (règles métier : anti double-booking, dépôt obligatoire) |
-| Contrats | Liste des contrats, traiter un retour | **sp_process_return** (met à jour véhicule/réservation automatiquement) |
-| → Facture | Générer la facture, voir le détail, enregistrer un paiement | **sp_generate_invoice**, Payment |
-| Rapports | Les 4 rapports requis + réservations par catégorie + soldes impayés | Les 8 vues de 04_views.sql |
-| → Export Excel BI | Bouton **Exporter en Excel** : classeur avec onglet *Tableau de bord* (cartes KPI + 4 graphiques Excel natifs) et un tableau Excel filtrable par rapport (`/reports/export.xlsx`) | Mêmes vues que la page Rapports |
+| GET | `/` | Dashboard |
+| GET | `/customers` | Customer list |
+| GET | `/customers/new` | New customer form |
+| POST | `/customers` | Create a customer (individual or corporate, transactional) |
+| GET | `/vehicles` | Vehicle availability |
+| GET | `/bookings` | Booking list |
+| GET | `/bookings/new` | New booking form |
+| POST | `/bookings` | Create a booking |
+| POST | `/bookings/:id/cancel` | Cancel a booking |
+| GET | `/bookings/:id/confirm` | Vehicle / employee assignment form |
+| POST | `/bookings/:id/confirm` | Confirm the booking (`sp_confirm_booking`) |
+| GET | `/agreements` | Rental agreement list |
+| GET | `/agreements/:id/return` | Return form |
+| POST | `/agreements/:id/return` | Process the return (`sp_process_return`) |
+| GET | `/agreements/:id/invoice` | Invoice details |
+| POST | `/agreements/:id/invoice/generate` | Generate the invoice (`sp_generate_invoice`) |
+| POST | `/agreements/:id/payment` | Record a payment |
+| GET | `/reports` | Reports page |
+| GET | `/reports/export.xlsx` | Download the Excel BI workbook |
 
-Toutes les règles métier (anti double-booking, dépôt client, mise à jour automatique du statut véhicule, pénalité de retard) sont celles que tu as déjà testées dans `06_business_rule_demo.sql` — l'application ne fait qu'appeler les mêmes procédures et triggers ; si une règle est violée, le message d'erreur exact renvoyé par PostgreSQL s'affiche dans le formulaire.
+Add `?lang=en` or `?lang=fr` to any URL to switch the interface language.
 
-## Dépannage
+## Database objects used
 
-- **"connection refused" / "ECONNREFUSED"** : le serveur PostgreSQL n'est pas démarré, ou `.env` pointe vers le mauvais port/hôte.
-- **"password authentication failed"** : le mot de passe dans `.env` ne correspond pas à celui de l'utilisateur PostgreSQL indiqué (`PGUSER`).
-- **"database swiftdrive_vrms does not exist"** : crée-la d'abord et exécute les 9 scripts SQL comme indiqué dans le rapport de soumission.
-- Une erreur de contrainte (ex. *"violates check constraint"*) qui s'affiche dans un formulaire n'est pas un bug de l'application — c'est la base de données qui applique une règle d'intégrité (voir le rapport, Section 5 et 7).
+**Tables:** `Customer`, `IndividualCustomer`, `CorporateCustomer`, `Branch`, `VehicleCategory`, `Vehicle`, `Booking`, `RentalAgreement`, `Invoice`, `Payment` (plus the `booking_ref_seq` sequence).
+
+**Views:** `vw_TodaysBookings`, `vw_FleetUtilization`, `vw_OverdueReturns`, `vw_RevenueByVehicleType`, `vw_BookingsDetail`, `vw_VehicleAvailability`, and the other reporting views from `04_views.sql`.
+
+**Stored procedures:**
+
+| Procedure | Purpose |
+|---|---|
+| `sp_confirm_booking` | Assigns a vehicle and employee to a booking and opens a rental agreement. Enforces no double-booking and the mandatory deposit. |
+| `sp_process_return` | Records a vehicle return and updates the agreement, vehicle and booking statuses. |
+| `sp_generate_invoice` | Computes the invoice for an agreement, including late-return penalties. |
+
+Triggers defined in the database (such as automatic vehicle status updates) fire automatically when the app writes to these tables.
+
+## Internationalisation (EN / FR)
+
+The **EN / FR** buttons in the top-right corner switch the whole interface (menus, forms, statuses, dates, and currency formatting). The selected language is stored in a `vrms_lang` cookie for one year. French is the default.
+
+All strings live in [`i18n.js`](i18n.js). To add or change a label, edit both the `en` and `fr` entries for its key.
+
+## Excel BI export
+
+The **Export to Excel** button on the Reports page (`/reports/export.xlsx`) generates a workbook with:
+
+- a **Dashboard** sheet with KPI cards and four native Excel charts;
+- one sheet per report, each formatted as a filterable Excel table.
+
+It uses the same queries as the Reports page, so the figures always match what you see on screen.
+
+## Troubleshooting
+
+| Symptom | Likely cause and fix |
+|---|---|
+| `ECONNREFUSED` / "connection refused" | PostgreSQL is not running, or `PGHOST` / `PGPORT` in `.env` are wrong. |
+| "password authentication failed" | `PGPASSWORD` does not match the password for `PGUSER`. |
+| "database swiftdrive_vrms does not exist" | Create the database and run the nine SQL scripts first. |
+| "relation vw_... does not exist" | Some SQL scripts (for example, the views in `04_views.sql`) were not executed. |
+| A constraint error shown in a form (e.g. *violates check constraint*) | Not an app bug: the database is enforcing an integrity or business rule. Correct the input and try again. |
+| Port 3000 already in use | Set a different `PORT` in `.env`. |
