@@ -43,6 +43,10 @@ The full rental lifecycle has been tested end to end:
 | **Vehicles:** real-time availability by branch<br>![Vehicles](docs/app/vehicles.png) | **Agreements:** active, overdue and closed rentals<br>![Agreements](docs/app/agreements.png) |
 | **New booking**<br>![New booking](docs/app/booking_new.png) | **French interface:** the whole UI switches with one click<br>![Dashboard in French](docs/app/dashboard_fr.png) |
 
+**Excel BI export:** one click on the Reports page generates a workbook with KPI cards and native Excel charts
+
+![Excel BI dashboard](docs/app/excel_dashboard.png)
+
 <details>
 <summary><b>Reports page</b> (fleet utilisation, revenue, overdue returns, outstanding balances)</summary>
 
@@ -273,6 +277,8 @@ The **Export to Excel** button on the Reports page (`/reports/export.xlsx`) gene
 - one sheet per report, each formatted as a filterable Excel table.
 
 It uses the same queries as the Reports page, so the figures always match what you see on screen.
+
+![Excel BI dashboard sheet](docs/app/excel_dashboard.png)
 
 ## Troubleshooting
 
