@@ -23,7 +23,7 @@
           <td><%= new Date(b.pickupdate).toLocaleDateString(dateLocale) %></td>
           <td><%= new Date(b.returndateexpected).toLocaleDateString(dateLocale) %></td>
           <td>
-            <% const c = { Requested: 'grey', Confirmed: 'navy', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
+            <% const c = { Requested: 'grey', Confirmed: 'brand', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
             <span class="badge <%= c %>"><%= statusLabel('booking', b.bookingstatus) %></span>
           </td>
           <td>

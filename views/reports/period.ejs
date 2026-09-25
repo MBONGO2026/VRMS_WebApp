@@ -70,7 +70,7 @@
 
 <% if (period && data) { const s = data.summary; %>
 <div class="period-banner">
-  <span class="badge navy"><%= t(`period.type.${period.type}`) %></span>
+  <span class="badge brand"><%= t(`period.type.${period.type}`) %></span>
   <strong><%= period.label %></strong>
   <% if (period.type === 'custom') { %>
     <span class="muted"><%= t('period.days', { n: period.days }) %></span>
@@ -258,7 +258,7 @@
   <div class="table-wrap"><table>
     <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th><th><%= t('col.pickup') %></th><th><%= t('col.returnExpected') %></th><th><%= t('col.status') %></th></tr></thead>
     <tbody>
-      <% data.bookingList.forEach((b) => { const c = { Requested: 'grey', Confirmed: 'navy', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
+      <% data.bookingList.forEach((b) => { const c = { Requested: 'grey', Confirmed: 'brand', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
         <tr><td>#<%= b.bookingid %></td><td><%= b.customername %></td><td><%= b.categoryname %></td><td><%= b.branchname %></td>
           <td><%= fmtDate(b.pickupdate) %></td><td><%= fmtDate(b.returndateexpected) %></td><td><span class="badge <%= c %>"><%= statusLabel('booking', b.bookingstatus) %></span></td></tr>
       <% }) %>
@@ -289,7 +289,7 @@
       <thead><tr><th><%= t('period.colDate') %></th><th><%= t('col.customer') %></th><th><%= t('period.colType') %></th><th><%= t('period.colMethod') %></th><th class="right"><%= t('period.colAmount') %></th></tr></thead>
       <tbody>
         <% data.paymentList.forEach((p) => { %>
-          <tr><td><%= fmtDate(p.paymentdate) %></td><td><%= p.customername %></td><td><%= statusLabel('paymenttype', p.paymenttype) %></td><td><%= p.paymentmethod %></td><td class="right"><%= money(p.amount) %></td></tr>
+          <tr><td><%= fmtDate(p.paymentdate) %></td><td><%= p.customername %></td><td><%= statusLabel('paymenttype', p.paymenttype) %></td><td><%= statusLabel('paymentmethod', p.paymentmethod) %></td><td class="right"><%= money(p.amount) %></td></tr>
         <% }) %>
       </tbody>
     </table></div>

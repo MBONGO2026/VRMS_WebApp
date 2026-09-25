@@ -17,7 +17,7 @@
         <% customers.forEach(c => { %>
         <tr>
           <td>#<%= c.customerid %></td>
-          <td><span class="badge <%= c.customertype === 'Corporate' ? 'navy' : 'grey' %>"><%= c.customertype === 'Corporate' ? t('common.corporate') : t('common.individual') %></span></td>
+          <td><span class="badge <%= c.customertype === 'Corporate' ? 'brand' : 'grey' %>"><%= c.customertype === 'Corporate' ? t('common.corporate') : t('common.individual') %></span></td>
           <td><%= c.name %></td>
           <td><%= c.email %></td>
           <td><%= c.phone %></td>
