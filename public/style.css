@@ -170,6 +170,42 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--orange); ou
 }
 .section-tabs a.active { background: var(--navy); color: #fff; }
 
+.section-tabs { flex-wrap: wrap; }
+
+/* ---------- Period reports ---------- */
+.period-form { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+.period-form .field { min-width: 180px; }
+.date-select { border: none; padding: 0; margin: 0; }
+.date-select legend { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 5px; padding: 0; }
+.date-parts { display: flex; gap: 6px; }
+.date-parts select { width: auto; }
+.period-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.period-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; color: var(--navy); }
+.period-banner strong { font-size: 19px; text-transform: capitalize; }
+.period-banner .muted { font-size: 13.5px; }
+
+.kpis { margin-bottom: 20px; }
+.grid.cols-4.kpis { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .grid.cols-4.kpis { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .grid.cols-4.kpis { grid-template-columns: 1fr; } }
+.stat .caption { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.card h2 .count { font-size: 12px; font-weight: 600; background: #EDEFF3; color: var(--muted); padding: 2px 8px; border-radius: 20px; vertical-align: middle; }
+
+.legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+.barchart { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 3px; align-items: end; height: 220px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.barchart .col { display: flex; flex-direction: column; height: 100%; min-width: 0; }
+.barchart .bars { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 1px; }
+.barchart .bar { width: 45%; max-width: 22px; min-height: 1px; border-radius: 3px 3px 0 0; }
+.barchart .bar.navy { background: var(--navy); }
+.barchart .bar.green { background: var(--green); }
+.barchart .col:hover .bar { opacity: 0.8; }
+.barchart .tick { font-size: 10.5px; color: var(--muted); text-align: center; padding-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+
+.meter { display: inline-block; width: 70px; height: 7px; background: #EDEFF3; border-radius: 4px; margin-right: 8px; vertical-align: middle; overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--orange); }
+
 footer.appfooter {
   text-align: center; color: var(--muted); font-size: 12.5px; padding: 24px; margin-top: 20px;
 }
@@ -181,3 +217,4 @@ footer.appfooter {
 .muted { color: var(--muted); }
 .mono { font-family: Consolas, "Courier New", monospace; }
 .right { text-align: right; }
+td.right { white-space: nowrap; }

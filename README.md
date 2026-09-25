@@ -47,6 +47,17 @@ The full rental lifecycle has been tested end to end:
 
 ![Excel BI dashboard](docs/app/excel_dashboard.png)
 
+**Period reports:** daily, monthly, annual or custom date range (from dd/mm/yyyy to dd/mm/yyyy), each exportable to Excel
+
+![Period report](docs/app/period_report.png)
+
+<details>
+<summary><b>Excel export of a monthly report</b> (KPIs, day-by-day trend, revenue, utilisation, branches)</summary>
+
+![Excel monthly report](docs/app/excel_period_report.png)
+
+</details>
+
 <details>
 <summary><b>Reports page</b> (fleet utilisation, revenue, overdue returns, outstanding balances)</summary>
 
@@ -67,7 +78,8 @@ The full rental lifecycle has been tested end to end:
 | **Agreements** | List rental agreements (overdue ones are flagged); process a vehicle return (return date, odometer, fuel level, condition). |
 | **Invoices & payments** | Generate the invoice for a completed agreement, view its details, and record payments until the balance is settled. |
 | **Reports** | Fleet utilisation, revenue by vehicle type, overdue returns, today's bookings, bookings per category, and outstanding customer balances. |
-| **Excel export** | One-click download of a BI workbook with KPI cards, native Excel charts, and filterable tables. |
+| **Period reports** | **Daily**, **monthly**, **annual** or **custom-range** reports: bookings, rentals, returns, invoiced vs. received revenue, fleet utilisation, per-category and per-branch performance, with a trend chart and previous/next navigation. |
+| **Excel export** | One-click download of a BI workbook with KPI cards, native Excel charts, and filterable tables, for the overview and for every period report. |
 | **Bilingual UI** | Switch between English and French at any time; the choice is remembered. |
 
 ## Tech stack
@@ -87,15 +99,17 @@ VRMS_WebApp/
 ├── db.js                # Shared PostgreSQL connection pool
 ├── i18n.js              # English / French translation dictionary and helpers
 ├── lib/
-│   ├── excelReport.js   # Builds the BI Excel workbook
-│   └── xlsxCharts.js    # Injects native Excel charts into the workbook
+│   ├── excelReport.js   # Builds the BI Excel workbooks (overview + period reports)
+│   ├── xlsxCharts.js    # Injects native Excel charts into the workbook
+│   ├── period.js        # Parses daily / monthly / annual / custom periods into a date range
+│   └── periodReport.js  # SQL queries behind the period reports
 ├── routes/
 │   ├── dashboard.js     # GET /
 │   ├── customers.js     # /customers
 │   ├── vehicles.js      # /vehicles
 │   ├── bookings.js      # /bookings
 │   ├── agreements.js    # /agreements (returns, invoices, payments)
-│   └── reports.js       # /reports and Excel export
+│   └── reports.js       # /reports, /reports/period and Excel exports
 ├── views/               # EJS templates (one folder per section + shared layout)
 ├── public/style.css     # Stylesheet
 ├── sql/                 # Database scripts (schema, triggers, views, sample data, demos)
@@ -219,7 +233,7 @@ A typical rental goes through these steps:
 3. **Confirm the booking:** from the booking list, click *Confirm*, then pick an available vehicle and the employee handling the rental. This calls `sp_confirm_booking`, which rejects double-bookings and checks the deposit, then opens a rental agreement.
 4. **Process the return:** *Agreements → Return*. Enter the return date, odometer reading, fuel level and condition. `sp_process_return` closes the agreement and updates the vehicle and booking statuses.
 5. **Invoice and payment:** *Agreements → Invoice → Generate invoice* (`sp_generate_invoice`, including any late penalty), then record one or more payments until the invoice is paid.
-6. **Review reports:** *Reports* shows the business reports, and *Export to Excel* downloads the BI workbook.
+6. **Review reports:** *Reports* shows the current business overview, and *Export to Excel* downloads the BI workbook. The *Daily*, *Monthly*, *Annual* and *Custom range* tabs produce a report for any period; use ← / → to move to the previous or next period, and *Export this report to Excel* to download it.
 
 ## Routes
 
@@ -244,6 +258,17 @@ A typical rental goes through these steps:
 | POST | `/agreements/:id/payment` | Record a payment |
 | GET | `/reports` | Reports page |
 | GET | `/reports/export.xlsx` | Download the Excel BI workbook |
+| GET | `/reports/period` | Period report (see parameters below) |
+| GET | `/reports/period/export.xlsx` | Download a period report as Excel (same parameters) |
+
+Period report parameters:
+
+| Report | Query string example |
+|---|---|
+| Daily | `?type=daily&date=2026-09-21` |
+| Monthly | `?type=monthly&month=9&year=2026` |
+| Annual | `?type=annual&year=2026` |
+| Custom range | `?type=custom&from=2026-09-01&to=2026-09-25` |
 
 Add `?lang=en` or `?lang=fr` to any URL to switch the interface language.
 
@@ -279,6 +304,20 @@ The **Export to Excel** button on the Reports page (`/reports/export.xlsx`) gene
 It uses the same queries as the Reports page, so the figures always match what you see on screen.
 
 ![Excel BI dashboard sheet](docs/app/excel_dashboard.png)
+
+### Period reports
+
+Each period report (`/reports/period/export.xlsx`) has its own workbook: a dashboard with six KPIs and up to five native charts (trend, revenue by vehicle type, bookings by category, utilisation, performance by branch), followed by detail sheets for bookings, invoices, payments and returns.
+
+Each figure is filtered on the date that matters for it, so nothing is counted twice across periods:
+
+| Figure | Filtered on |
+|---|---|
+| Bookings | Pickup date (same rule as *Today's bookings*) |
+| Rentals started / returns | Actual pickup date / actual return date |
+| Invoiced, still outstanding | Invoice date |
+| Received | Payment date (all payments, including deposits, net of refunds) |
+| Fleet utilisation | Vehicle-days rented ÷ vehicle-days available, counted up to today |
 
 ## Troubleshooting
 

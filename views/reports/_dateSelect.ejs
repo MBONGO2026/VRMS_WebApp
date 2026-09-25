@@ -1,0 +1,21 @@
+<%# A date entered as day / month / year dropdowns, so the order never depends on the browser language. %>
+<fieldset class="field date-select">
+  <legend><%= label %></legend>
+  <div class="date-parts">
+    <select name="<%= prefix %>Day" aria-label="<%= t('period.day') %>">
+      <% for (let d = 1; d <= 31; d++) { %>
+        <option value="<%= d %>" <%= value && value.day === d ? 'selected' : '' %>><%= String(d).padStart(2, '0') %></option>
+      <% } %>
+    </select>
+    <select name="<%= prefix %>Month" aria-label="<%= t('period.month') %>">
+      <% for (let m = 1; m <= 12; m++) { %>
+        <option value="<%= m %>" <%= value && value.month === m ? 'selected' : '' %>><%= new Date(2000, m - 1, 1).toLocaleDateString(dateLocale, { month: 'long' }) %></option>
+      <% } %>
+    </select>
+    <select name="<%= prefix %>Year" aria-label="<%= t('period.year') %>">
+      <% years.forEach((y) => { %>
+        <option value="<%= y %>" <%= value && value.year === y ? 'selected' : '' %>><%= y %></option>
+      <% }) %>
+    </select>
+  </div>
+</fieldset>

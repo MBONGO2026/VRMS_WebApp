@@ -1,0 +1,7 @@
+<div class="section-tabs">
+  <a href="/reports" class="<%= active === 'overview' ? 'active' : '' %>"><%= t('period.tab.overview') %></a>
+  <a href="/reports/period?type=daily" class="<%= active === 'daily' ? 'active' : '' %>"><%= t('period.type.daily') %></a>
+  <a href="/reports/period?type=monthly" class="<%= active === 'monthly' ? 'active' : '' %>"><%= t('period.type.monthly') %></a>
+  <a href="/reports/period?type=annual" class="<%= active === 'annual' ? 'active' : '' %>"><%= t('period.type.annual') %></a>
+  <a href="/reports/period?type=custom" class="<%= active === 'custom' ? 'active' : '' %>"><%= t('period.type.custom') %></a>
+</div>

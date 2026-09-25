@@ -21,8 +21,8 @@
       <a href="/reports" class="<%= currentPath.startsWith('/reports') ? 'active' : '' %>"><%= t('nav.reports') %></a>
     </nav>
     <div class="langswitch">
-      <a href="?lang=fr" class="<%= lang === 'fr' ? 'active' : '' %>">FR</a>
-      <a href="?lang=en" class="<%= lang === 'en' ? 'active' : '' %>">EN</a>
+      <a href="<%= langHref('fr') %>" class="<%= lang === 'fr' ? 'active' : '' %>">FR</a>
+      <a href="<%= langHref('en') %>" class="<%= lang === 'en' ? 'active' : '' %>">EN</a>
     </div>
   </header>
 

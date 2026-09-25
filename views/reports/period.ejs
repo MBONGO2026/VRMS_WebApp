@@ -1,0 +1,227 @@
+<%
+  const money = (v) => 'N$ ' + Number(v || 0).toLocaleString(dateLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (v) => new Date(v).toLocaleDateString(dateLocale);
+  const pct = (v) => v == null ? '—' : (v * 100).toFixed(1) + '%';
+  const inp = typeof input !== 'undefined' && input ? input : {};
+  // Year options: from the first recorded activity to next year, widened to
+  // include whatever year is currently displayed (e.g. after using ← / →).
+  const currentYear = new Date().getFullYear();
+  const shown = [inp.year, inp.date && inp.date.year, inp.from && inp.from.year, inp.to && inp.to.year].filter((y) => y > 0);
+  const years = [];
+  for (let y = Math.max(currentYear + 1, ...shown); y >= Math.min(firstYear, currentYear, ...shown) - 1; y--) years.push(y);
+%>
+<div class="page-header">
+  <div>
+    <h1><%= t('period.title') %></h1>
+    <p class="subtitle"><%= t('period.subtitle') %></p>
+  </div>
+  <% if (period) { %>
+    <a href="/reports/period/export.xlsx?<%= period.query %>" class="btn"><%= t('period.exportExcel') %></a>
+  <% } %>
+</div>
+
+<%- include('_tabs', { active: type }) %>
+
+<div class="card">
+  <form class="period-form" method="GET" action="/reports/period">
+    <input type="hidden" name="type" value="<%= type %>">
+    <% if (type === 'daily') { %>
+      <%- include('_dateSelect', { prefix: 'on', label: t('period.day'), value: inp.date, years }) %>
+    <% } else if (type === 'monthly' || type === 'annual') { %>
+      <% if (type === 'monthly') { %>
+      <div class="field">
+        <label for="month"><%= t('period.month') %></label>
+        <select id="month" name="month">
+          <% for (let m = 1; m <= 12; m++) { %>
+            <option value="<%= m %>" <%= Number(inp.month) === m ? 'selected' : '' %>><%= new Date(2000, m - 1, 1).toLocaleDateString(dateLocale, { month: 'long' }) %></option>
+          <% } %>
+        </select>
+      </div>
+      <% } %>
+      <div class="field">
+        <label for="year"><%= t('period.year') %></label>
+        <select id="year" name="year">
+          <% years.forEach((y) => { %>
+            <option value="<%= y %>" <%= Number(inp.year) === y ? 'selected' : '' %>><%= y %></option>
+          <% }) %>
+        </select>
+      </div>
+    <% } else { %>
+      <%- include('_dateSelect', { prefix: 'from', label: t('period.from'), value: inp.from, years }) %>
+      <%- include('_dateSelect', { prefix: 'to', label: t('period.to'), value: inp.to, years }) %>
+    <% } %>
+    <div class="period-actions">
+      <button type="submit" class="btn secondary"><%= t('period.generate') %></button>
+      <% if (period && period.prevQuery) { %>
+        <a class="btn ghost" href="/reports/period?<%= period.prevQuery %>" title="<%= t('period.previous') %>">←</a>
+        <a class="btn ghost" href="/reports/period?type=<%= type %>"><%= t(`period.current.${type}`) %></a>
+        <a class="btn ghost" href="/reports/period?<%= period.nextQuery %>" title="<%= t('period.next') %>">→</a>
+      <% } %>
+    </div>
+  </form>
+</div>
+
+<% if (error) { %>
+  <div class="flash error"><%= error %></div>
+<% } %>
+
+<% if (period && data) { const s = data.summary; %>
+<div class="period-banner">
+  <span class="badge navy"><%= t(`period.type.${period.type}`) %></span>
+  <strong><%= period.label %></strong>
+  <% if (period.type === 'custom') { %>
+    <span class="muted"><%= t('period.days', { n: period.days }) %></span>
+  <% } else if (period.from !== period.to) { %>
+    <span class="muted"><%= t('period.range', { from: fmtDate(period.from + 'T00:00:00'), to: fmtDate(period.to + 'T00:00:00'), n: period.days }) %></span>
+  <% } %>
+</div>
+
+<div class="grid cols-4 kpis">
+  <div class="stat"><div class="value"><%= s.bookings %></div><div class="label"><%= t('period.kpiBookings') %></div><div class="caption"><%= t('period.kpiCancelled', { n: s.cancelled }) %> · <%= t('period.byPickupDate') %></div></div>
+  <div class="stat"><div class="value"><%= s.rentals %></div><div class="label"><%= t('period.kpiRentals') %></div><div class="caption"><%= t('period.kpiReturns', { n: s.returns, late: s.latereturns }) %></div></div>
+  <div class="stat" style="border-left-color: var(--orange)"><div class="value"><%= pct(s.utilization) %></div><div class="label"><%= t('period.kpiUtilization') %></div><div class="caption"><%= t('period.kpiRentedDays', { n: s.renteddays }) %></div></div>
+  <div class="stat" style="border-left-color: var(--navy)"><div class="value"><%= money(s.invoiced) %></div><div class="label"><%= t('period.kpiInvoiced') %></div><div class="caption"><%= t('xlsx.kpiInvoices', { n: s.invoices }) %></div></div>
+  <div class="stat" style="border-left-color: var(--green)"><div class="value"><%= money(s.received) %></div><div class="label"><%= t('period.kpiReceived') %></div><div class="caption"><%= t('period.kpiReceivedHintLong', { deposits: money(s.deposits) }) %></div></div>
+  <div class="stat" style="border-left-color: var(--red)"><div class="value"><%= money(s.outstanding) %></div><div class="label"><%= t('period.kpiOutstanding') %></div><div class="caption"><%= t('period.kpiOutstandingHint') %></div></div>
+</div>
+
+<% if (data.trend.length) {
+  const max = Math.max(1, ...data.trend.map((b) => Math.max(Number(b.invoiced), Number(b.received))));
+  const crossesYear = period.from.slice(0, 4) !== period.to.slice(0, 4);
+  const bucketLabel = (d) => period.bucket === 'month'
+    ? new Date(d).toLocaleDateString(dateLocale, crossesYear ? { month: 'short', year: '2-digit' } : { month: 'short' })
+    : new Date(d).toLocaleDateString(dateLocale, period.type === 'monthly' ? { day: 'numeric' } : { day: '2-digit', month: '2-digit' });
+%>
+<div class="card">
+  <h2><%= t(period.bucket === 'month' ? 'period.trendMonthly' : 'period.trendDaily') %></h2>
+  <div class="legend">
+    <span><i style="background: var(--navy)"></i><%= t('period.kpiInvoiced') %></span>
+    <span><i style="background: var(--green)"></i><%= t('period.kpiReceived') %></span>
+  </div>
+  <div class="barchart" style="--n: <%= data.trend.length %>">
+    <% data.trend.forEach((b) => { %>
+      <div class="col" title="<%= bucketLabel(b.bucket) %> — <%= t('period.kpiInvoiced') %>: <%= money(b.invoiced) %> · <%= t('period.kpiReceived') %>: <%= money(b.received) %> · <%= t('period.kpiBookings') %>: <%= b.bookings %>">
+        <div class="bars">
+          <div class="bar navy" style="height: <%= (Number(b.invoiced) / max * 100).toFixed(1) %>%"></div>
+          <div class="bar green" style="height: <%= (Number(b.received) / max * 100).toFixed(1) %>%"></div>
+        </div>
+        <div class="tick"><%= bucketLabel(b.bucket) %></div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2><%= t('reports.revenueByCategory') %></h2>
+    <table>
+      <thead><tr><th><%= t('col.category') %></th><th><%= t('reports.colInvoices') %></th><th class="right"><%= t('period.kpiInvoiced') %></th><th class="right"><%= t('reports.colCollected') %></th><th class="right"><%= t('reports.colOutstanding') %></th></tr></thead>
+      <tbody>
+        <% data.revenue.forEach((r) => { %>
+          <tr><td><%= r.categoryname %></td><td><%= r.invoices %></td><td class="right"><%= money(r.invoiced) %></td><td class="right"><%= money(r.collected) %></td><td class="right"><%= money(r.outstanding) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2><%= t('period.utilizationByCategory') %></h2>
+    <table>
+      <thead><tr><th><%= t('col.category') %></th><th><%= t('xlsx.colVehicles') %></th><th><%= t('period.colRentedDays') %></th><th><%= t('reports.colUtilization') %></th></tr></thead>
+      <tbody>
+        <% data.utilization.forEach((u) => { %>
+          <tr><td><%= u.categoryname %></td><td><%= u.vehicles %></td><td><%= u.renteddays %></td>
+            <td><div class="meter"><span style="width: <%= Math.min(100, (u.utilization || 0) * 100).toFixed(1) %>%"></span></div><strong><%= pct(u.utilization) %></strong></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2><%= t('reports.bookingsByCategory') %></h2>
+    <table>
+      <thead><tr><th><%= t('col.category') %></th><th><%= t('period.kpiBookings') %></th><th><%= t('period.colCancelled') %></th></tr></thead>
+      <tbody>
+        <% data.bookingsByCategory.forEach((b) => { %>
+          <tr><td><%= b.categoryname %></td><td><%= b.bookings %></td><td><%= b.cancelled %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2><%= t('period.byBranch') %></h2>
+    <table>
+      <thead><tr><th><%= t('col.branch') %></th><th><%= t('period.kpiBookings') %></th><th class="right"><%= t('period.kpiInvoiced') %></th></tr></thead>
+      <tbody>
+        <% data.branches.forEach((b) => { %>
+          <tr><td><%= b.branchname %></td><td><%= b.bookings %></td><td class="right"><%= money(b.invoiced) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2><%= t('period.bookingList') %> <span class="count"><%= data.bookingList.length %></span></h2>
+  <% if (!data.bookingList.length) { %><p class="empty"><%= t('period.noBookings') %></p><% } else { %>
+  <div class="table-wrap"><table>
+    <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th><th><%= t('col.pickup') %></th><th><%= t('col.returnExpected') %></th><th><%= t('col.status') %></th></tr></thead>
+    <tbody>
+      <% data.bookingList.forEach((b) => { const c = { Requested: 'grey', Confirmed: 'navy', CheckedOut: 'amber', Completed: 'green', Cancelled: 'red' }[b.bookingstatus] || 'grey'; %>
+        <tr><td>#<%= b.bookingid %></td><td><%= b.customername %></td><td><%= b.categoryname %></td><td><%= b.branchname %></td>
+          <td><%= fmtDate(b.pickupdate) %></td><td><%= fmtDate(b.returndateexpected) %></td><td><span class="badge <%= c %>"><%= statusLabel('booking', b.bookingstatus) %></span></td></tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+  <% } %>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2><%= t('period.invoiceList') %> <span class="count"><%= data.invoiceList.length %></span></h2>
+    <% if (!data.invoiceList.length) { %><p class="empty"><%= t('period.noInvoices') %></p><% } else { %>
+    <div class="table-wrap"><table>
+      <thead><tr><th><%= t('reports.colInvoice') %></th><th><%= t('period.colDate') %></th><th><%= t('col.customer') %></th><th class="right"><%= t('xlsx.colInvoiceTotal') %></th><th class="right"><%= t('reports.colBalance') %></th></tr></thead>
+      <tbody>
+        <% data.invoiceList.forEach((i) => { %>
+          <tr><td><a href="/agreements/<%= i.agreementid %>/invoice">#<%= i.invoiceid %></a></td><td><%= fmtDate(i.invoicedate) %></td><td><%= i.customername %></td>
+            <td class="right"><%= money(i.totalamount) %></td><td class="right"><%= money(i.balance) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+    <% } %>
+  </div>
+  <div class="card">
+    <h2><%= t('period.paymentList') %> <span class="count"><%= data.paymentList.length %></span></h2>
+    <% if (!data.paymentList.length) { %><p class="empty"><%= t('period.noPayments') %></p><% } else { %>
+    <div class="table-wrap"><table>
+      <thead><tr><th><%= t('period.colDate') %></th><th><%= t('col.customer') %></th><th><%= t('period.colType') %></th><th><%= t('period.colMethod') %></th><th class="right"><%= t('period.colAmount') %></th></tr></thead>
+      <tbody>
+        <% data.paymentList.forEach((p) => { %>
+          <tr><td><%= fmtDate(p.paymentdate) %></td><td><%= p.customername %></td><td><%= statusLabel('paymenttype', p.paymenttype) %></td><td><%= p.paymentmethod %></td><td class="right"><%= money(p.amount) %></td></tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <h2><%= t('period.returnList') %> <span class="count"><%= data.returnList.length %></span></h2>
+  <% if (!data.returnList.length) { %><p class="empty"><%= t('period.noReturns') %></p><% } else { %>
+  <div class="table-wrap"><table>
+    <thead><tr><th><%= t('reports.colAgreement') %></th><th><%= t('reports.colVehicle') %></th><th><%= t('col.customer') %></th><th><%= t('reports.colReturnDue') %></th><th><%= t('period.colReturned') %></th><th><%= t('period.colDistance') %></th><th><%= t('period.colLate') %></th></tr></thead>
+    <tbody>
+      <% data.returnList.forEach((r) => { %>
+        <tr><td>#<%= r.agreementid %></td><td><%= r.registrationnumber %></td><td><%= r.customername %></td>
+          <td><%= fmtDate(r.returndateexpected) %></td><td><%= fmtDate(r.actualreturndate) %></td>
+          <td><%= r.distance != null ? Number(r.distance).toLocaleString(dateLocale) + ' km' : '—' %></td>
+          <td><% if (r.dayslate > 0) { %><span class="badge red"><%= t('reports.overdueDays', { n: r.dayslate }) %></span><% } else { %><span class="badge green"><%= t('period.onTime') %></span><% } %></td></tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+  <% } %>
+</div>
+<% } %>

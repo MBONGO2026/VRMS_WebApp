@@ -57,6 +57,13 @@ app.use((req, res, next) => {
   res.locals.t = t;
   res.locals.statusLabel = (group, value) => statusLabel(lang, group, value);
   res.locals.dateLocale = lang === 'en' ? 'en-US' : 'fr-FR';
+  // Language links keep the rest of the query string (e.g. the selected report period).
+  res.locals.langHref = (target) => {
+    const params = new URLSearchParams(req.query);
+    params.delete('flash'); params.delete('flashType');
+    params.set('lang', target);
+    return '?' + params.toString();
+  };
 
   next();
 });

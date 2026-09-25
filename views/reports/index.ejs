@@ -6,6 +6,8 @@
   <a href="/reports/export.xlsx" class="btn"><%= t('reports.exportExcel') %></a>
 </div>
 
+<%- include('_tabs', { active: 'overview' }) %>
+
 <div class="card" id="fleet">
   <h2><%= t('reports.fleetUtilization') %></h2>
   <table>

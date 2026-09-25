@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { buildExcelReport } = require('../lib/excelReport');
+const { buildExcelReport, buildPeriodExcelReport } = require('../lib/excelReport');
+const { resolvePeriod, submittedInput } = require('../lib/period');
+const { loadPeriodData, firstActivityYear } = require('../lib/periodReport');
 
 // Shared by the HTML page and the Excel BI export so both show the same figures.
 async function loadReportData() {
@@ -43,6 +45,52 @@ router.get('/export.xlsx', async (req, res, next) => {
     const now = new Date();
     const buffer = await buildExcelReport(data, { t: req.t, lang: req.lang, generatedAt: now });
     const fileName = `${req.t('xlsx.fileName')}_${now.toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(buffer);
+  } catch (err) { next(err); }
+});
+
+// ---------- Period reports: daily / monthly / annual / custom range ----------
+
+router.get('/period', async (req, res, next) => {
+  try {
+    const firstYear = await firstActivityYear();
+    const view = { title: req.t('period.title'), firstYear, period: null, data: null, error: null, type: req.query.type };
+    try {
+      view.period = resolvePeriod(req.query, res.locals.dateLocale);
+    } catch (err) {
+      if (!err.i18nKey) throw err;
+      view.error = req.t(err.i18nKey);
+      view.input = submittedInput(req.query);
+      return res.status(400).render('reports/period', view);
+    }
+    view.type = view.period.type;
+    view.input = view.period.input;
+    view.data = await loadPeriodData(view.period);
+    res.render('reports/period', view);
+  } catch (err) { next(err); }
+});
+
+router.get('/period/export.xlsx', async (req, res, next) => {
+  try {
+    let period;
+    try {
+      period = resolvePeriod(req.query, res.locals.dateLocale);
+    } catch (err) {
+      if (!err.i18nKey) throw err;
+      return res.redirect(`/reports/period?${new URLSearchParams(req.query)}`);
+    }
+    const data = await loadPeriodData(period);
+    const now = new Date();
+    const buffer = await buildPeriodExcelReport(data, period, { t: req.t, lang: req.lang, generatedAt: now });
+    const suffix = {
+      daily: period.from,
+      monthly: period.from.slice(0, 7),
+      annual: period.from.slice(0, 4),
+      custom: `${period.from}_${period.to}`,
+    }[period.type];
+    const fileName = `${req.t(`period.fileName.${period.type}`)}_${suffix}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.send(buffer);
