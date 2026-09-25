@@ -289,6 +289,7 @@ const dict = {
   'period.range': { fr: 'du {{from}} au {{to}} · {{n}} jours', en: '{{from}} to {{to}} · {{n}} days' },
   'pdf.export': { fr: '⬇ Exporter en PDF', en: '⬇ Export to PDF' },
   'pdf.page': { fr: 'Page {{n}} / {{total}}', en: 'Page {{n}} of {{total}}' },
+  'period.viewTable': { fr: 'Voir les valeurs sous forme de tableau', en: 'View the values as a table' },
   'period.days': { fr: '{{n}} jours', en: '{{n}} days' },
   'period.exportExcel': { fr: '⬇ Exporter ce rapport en Excel', en: '⬇ Export this report to Excel' },
   'period.errInvalidDate': { fr: 'Date invalide. Vérifiez la période sélectionnée.', en: 'Invalid date. Please check the selected period.' },

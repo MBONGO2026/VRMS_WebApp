@@ -1,7 +1,7 @@
 <%
   const money = (v) => 'N$ ' + Number(v || 0).toLocaleString(dateLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtDate = (v) => new Date(v).toLocaleDateString(dateLocale);
-  const pct = (v) => v == null ? '—' : (v * 100).toFixed(1) + '%';
+  const pct = fmtPct;
   const inp = typeof input !== 'undefined' && input ? input : {};
   // Year options: from the first recorded activity to next year, widened to
   // include whatever year is currently displayed (e.g. after using ← / →).
@@ -82,37 +82,123 @@
 <div class="grid cols-4 kpis">
   <div class="stat"><div class="value"><%= s.bookings %></div><div class="label"><%= t('period.kpiBookings') %></div><div class="caption"><%= t('period.kpiCancelled', { n: s.cancelled }) %> · <%= t('period.byPickupDate') %></div></div>
   <div class="stat"><div class="value"><%= s.rentals %></div><div class="label"><%= t('period.kpiRentals') %></div><div class="caption"><%= t('period.kpiReturns', { n: s.returns, late: s.latereturns }) %></div></div>
-  <div class="stat" style="border-left-color: var(--orange)"><div class="value"><%= pct(s.utilization) %></div><div class="label"><%= t('period.kpiUtilization') %></div><div class="caption"><%= t('period.kpiRentedDays', { n: s.renteddays }) %></div></div>
-  <div class="stat" style="border-left-color: var(--navy)"><div class="value"><%= money(s.invoiced) %></div><div class="label"><%= t('period.kpiInvoiced') %></div><div class="caption"><%= t('xlsx.kpiInvoices', { n: s.invoices }) %></div></div>
-  <div class="stat" style="border-left-color: var(--green)"><div class="value"><%= money(s.received) %></div><div class="label"><%= t('period.kpiReceived') %></div><div class="caption"><%= t('period.kpiReceivedHintLong', { deposits: money(s.deposits) }) %></div></div>
-  <div class="stat" style="border-left-color: var(--red)"><div class="value"><%= money(s.outstanding) %></div><div class="label"><%= t('period.kpiOutstanding') %></div><div class="caption"><%= t('period.kpiOutstandingHint') %></div></div>
+  <div class="stat"><div class="value"><%= pct(s.utilization) %></div><div class="label"><%= t('period.kpiUtilization') %></div><div class="caption"><%= t('period.kpiRentedDays', { n: s.renteddays }) %></div></div>
+  <div class="stat"><div class="value"><%= money(s.invoiced) %></div><div class="label"><%= t('period.kpiInvoiced') %></div><div class="caption"><%= t('xlsx.kpiInvoices', { n: s.invoices }) %></div></div>
+  <div class="stat"><div class="value"><%= money(s.received) %></div><div class="label"><%= t('period.kpiReceived') %></div><div class="caption"><%= t('period.kpiReceivedHintLong', { deposits: money(s.deposits) }) %></div></div>
+  <div class="stat"><div class="value"><%= money(s.outstanding) %></div><div class="label"><%= t('period.kpiOutstanding') %></div><div class="caption"><%= t('period.kpiOutstandingHint') %></div></div>
 </div>
 
 <% if (data.trend.length) {
-  const max = Math.max(1, ...data.trend.map((b) => Math.max(Number(b.invoiced), Number(b.received))));
+  // Clean axis top: 1, 2, 2.5 or 5 times a power of ten, split in four steps.
+  const top = Math.max(0, ...data.trend.map((b) => Math.max(Number(b.invoiced), Number(b.received))));
+  const pow = 10 ** Math.floor(Math.log10(top || 1));
+  const max = top > 0 ? [1, 2, 2.5, 5, 10].map((m) => m * pow).find((m) => m >= top) : 4;
+  const ticks = [0, 1, 2, 3, 4].map((k) => (max * k) / 4);
+  const compact = new Intl.NumberFormat(dateLocale, { notation: 'compact', maximumFractionDigits: 1 });
   const crossesYear = period.from.slice(0, 4) !== period.to.slice(0, 4);
-  const bucketLabel = (d) => period.bucket === 'month'
-    ? new Date(d).toLocaleDateString(dateLocale, crossesYear ? { month: 'short', year: '2-digit' } : { month: 'short' })
-    : new Date(d).toLocaleDateString(dateLocale, period.type === 'monthly' ? { day: 'numeric' } : { day: '2-digit', month: '2-digit' });
+  const bucketLabel = (d, long) => period.bucket === 'month'
+    ? new Date(d).toLocaleDateString(dateLocale, long || crossesYear ? { month: long ? 'long' : 'short', year: 'numeric' } : { month: 'short' })
+    : new Date(d).toLocaleDateString(dateLocale, long ? { weekday: 'short', day: 'numeric', month: 'long' } : period.type === 'monthly' ? { day: 'numeric' } : { day: '2-digit', month: '2-digit' });
+  const labelEvery = Math.ceil(data.trend.length / 16);
+  const h = (v) => (Number(v) / max * 100).toFixed(2);
 %>
-<div class="card">
-  <h2><%= t(period.bucket === 'month' ? 'period.trendMonthly' : 'period.trendDaily') %></h2>
-  <div class="legend">
-    <span><i style="background: var(--navy)"></i><%= t('period.kpiInvoiced') %></span>
-    <span><i style="background: var(--green)"></i><%= t('period.kpiReceived') %></span>
+<figure class="card chart" id="trend">
+  <figcaption>
+    <h2><%= t(period.bucket === 'month' ? 'period.trendMonthly' : 'period.trendDaily') %></h2>
+    <ul class="legend">
+      <li><i class="key series-2"></i><%= t('period.kpiInvoiced') %></li>
+      <li><i class="key series-1"></i><%= t('period.kpiReceived') %></li>
+    </ul>
+  </figcaption>
+  <div class="plot">
+    <div class="y-axis" aria-hidden="true">
+      <% ticks.forEach((v) => { %><span style="bottom: <%= h(v) %>%">N$ <%= compact.format(v) %></span><% }) %>
+    </div>
+    <div class="plot-area">
+      <% ticks.forEach((v) => { %><span class="gridline" style="bottom: <%= h(v) %>%"></span><% }) %>
+      <ol class="columns" style="--n: <%= data.trend.length %>">
+        <% data.trend.forEach((b, i) => { %>
+          <li class="col" tabindex="0"
+              aria-label="<%= bucketLabel(b.bucket, true) %> : <%= t('period.kpiInvoiced') %> <%= money(b.invoiced) %>, <%= t('period.kpiReceived') %> <%= money(b.received) %>, <%= b.bookings %> <%= t('period.kpiBookings').toLowerCase() %>"
+              data-when="<%= bucketLabel(b.bucket, true) %>" data-invoiced="<%= money(b.invoiced) %>" data-received="<%= money(b.received) %>" data-bookings="<%= b.bookings %>">
+            <span class="bar series-2" style="height: <%= h(b.invoiced) %>%"></span>
+            <span class="bar series-1" style="height: <%= h(b.received) %>%"></span>
+            <span class="tick" aria-hidden="true"><%= i % labelEvery === 0 ? bucketLabel(b.bucket) : '' %></span>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
   </div>
-  <div class="barchart" style="--n: <%= data.trend.length %>">
-    <% data.trend.forEach((b) => { %>
-      <div class="col" title="<%= bucketLabel(b.bucket) %> — <%= t('period.kpiInvoiced') %>: <%= money(b.invoiced) %> · <%= t('period.kpiReceived') %>: <%= money(b.received) %> · <%= t('period.kpiBookings') %>: <%= b.bookings %>">
-        <div class="bars">
-          <div class="bar navy" style="height: <%= (Number(b.invoiced) / max * 100).toFixed(1) %>%"></div>
-          <div class="bar green" style="height: <%= (Number(b.received) / max * 100).toFixed(1) %>%"></div>
-        </div>
-        <div class="tick"><%= bucketLabel(b.bucket) %></div>
-      </div>
-    <% }) %>
-  </div>
-</div>
+  <div class="chart-tooltip" role="status" hidden></div>
+  <details class="table-view">
+    <summary><%= t('period.viewTable') %></summary>
+    <div class="table-wrap"><table>
+      <thead><tr><th><%= t(period.bucket === 'month' ? 'period.month' : 'period.day') %></th><th class="right"><%= t('period.kpiInvoiced') %></th><th class="right"><%= t('period.kpiReceived') %></th><th class="right"><%= t('period.kpiBookings') %></th></tr></thead>
+      <tbody>
+        <% data.trend.forEach((b) => { %>
+          <tr><td><%= bucketLabel(b.bucket, true) %></td><td class="right"><%= money(b.invoiced) %></td><td class="right"><%= money(b.received) %></td><td class="right"><%= b.bookings %></td></tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+  </details>
+</figure>
+<script>
+  // Tooltip on hover and keyboard focus: value first, label second. Text is set
+  // with textContent, never HTML, since labels come from the data.
+  (function () {
+    var chart = document.getElementById('trend');
+    var tip = chart.querySelector('.chart-tooltip');
+    var labels = { invoiced: <%- JSON.stringify(t('period.kpiInvoiced')) %>, received: <%- JSON.stringify(t('period.kpiReceived')) %>, bookings: <%- JSON.stringify(t('period.kpiBookings')) %> };
+    function row(cls, value, label) {
+      var r = document.createElement('div'); r.className = 'tip-row';
+      if (cls) { var k = document.createElement('i'); k.className = 'line-key ' + cls; r.appendChild(k); }
+      var v = document.createElement('strong'); v.textContent = value; r.appendChild(v);
+      var l = document.createElement('span'); l.textContent = label; r.appendChild(l);
+      return r;
+    }
+    function show(col) {
+      var d = col.dataset;
+      tip.replaceChildren();
+      var head = document.createElement('div'); head.className = 'tip-head'; head.textContent = d.when; tip.appendChild(head);
+      tip.appendChild(row('series-2', d.invoiced, labels.invoiced));
+      tip.appendChild(row('series-1', d.received, labels.received));
+      tip.appendChild(row('', d.bookings, labels.bookings));
+      tip.hidden = false;
+      var c = chart.getBoundingClientRect(), r = col.getBoundingClientRect();
+      var barTop = Math.min.apply(null, Array.prototype.map.call(col.querySelectorAll('.bar'), function (b) { return b.getBoundingClientRect().top; }));
+      var above = barTop - c.top - tip.offsetHeight - 8;
+      var plotTop = chart.querySelector('.plot-area').getBoundingClientRect().top - c.top;
+      if (above >= plotTop) {
+        // Room above the bars: center the tooltip over the column.
+        tip.style.left = Math.min(Math.max(r.left + r.width / 2 - c.left - tip.offsetWidth / 2, 8), c.width - tip.offsetWidth - 8) + 'px';
+        tip.style.top = above + 'px';
+      } else {
+        // Tall bars: sit beside the column (right, or left near the edge) so the title stays visible.
+        var right = r.right - c.left + 8;
+        tip.style.left = (right + tip.offsetWidth > c.width - 8 ? r.left - c.left - tip.offsetWidth - 8 : right) + 'px';
+        tip.style.top = Math.max(barTop - c.top, plotTop) + 'px';
+      }
+      if (current && current !== col) current.classList.remove('active');
+      current = col;
+      col.classList.add('active');
+    }
+    function hide(col) {
+      col.classList.remove('active');
+      if (current !== col) return; // another column owns the tooltip now
+      current = null;
+      tip.hidden = true;
+      // Keyboard focus keeps its tooltip when the mouse leaves another column.
+      if (focused && focused !== col) show(focused);
+    }
+    var current = null, focused = null;
+    chart.querySelectorAll('.col').forEach(function (col) {
+      col.addEventListener('pointerenter', function () { show(col); });
+      col.addEventListener('pointerleave', function () { hide(col); });
+      col.addEventListener('focus', function () { focused = col; show(col); });
+      col.addEventListener('blur', function () { if (focused === col) focused = null; hide(col); });
+    });
+  })();
+</script>
 <% } %>
 
 <div class="grid cols-2">

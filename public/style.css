@@ -11,6 +11,18 @@
   --green: #1E7E34;
   --red: #B02A2A;
   --amber: #B8860B;
+  /* Chart series: validated categorical palette, shared with the Excel and PDF
+     exports (lib/chartPalette.js). Brand navy/orange stay in the chrome. */
+  --series-1: #2A78D6;
+  --series-2: #EB6834;
+  --track: #CDE2FB;
+  --gridline: #E1E0D9;
+  --axis: #C3C2B7;
+}
+
+/* Visible keyboard focus everywhere. */
+a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 4px;
 }
 
 * { box-sizing: border-box; }
@@ -125,11 +137,12 @@ nav.mainnav a.active { background: var(--orange); color: #fff; font-weight: 600;
   padding: 16px;
 }
 .stat .value { font-size: 26px; font-weight: 700; color: var(--navy); }
-.stat .label { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.stat .label { font-size: 13px; color: var(--muted); font-weight: 600; }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
-th { background: var(--navy); color: #fff; font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+th { background: var(--navy); color: #fff; font-weight: 600; font-size: 13px; }
+td.right, td .num { font-variant-numeric: tabular-nums; }
 tr:nth-child(even) td { background: #FAFBFD; }
 .table-wrap { overflow-x: auto; }
 
@@ -183,7 +196,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--orange); ou
 .date-parts select { width: auto; }
 .period-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .period-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; color: var(--navy); }
-.period-banner strong { font-size: 19px; text-transform: capitalize; }
+.period-banner strong { font-size: 19px; display: inline-block; }
+.period-banner strong::first-letter { text-transform: uppercase; }
 .period-banner .muted { font-size: 13.5px; }
 
 .kpis { margin-bottom: 20px; }
@@ -194,19 +208,65 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--orange); ou
 
 .card h2 .count { font-size: 12px; font-weight: 600; background: #EDEFF3; color: var(--muted); padding: 2px 8px; border-radius: 20px; vertical-align: middle; }
 
-.legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
-.barchart { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 3px; align-items: end; height: 220px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-.barchart .col { display: flex; flex-direction: column; height: 100%; min-width: 0; }
-.barchart .bars { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 1px; }
-.barchart .bar { width: 45%; max-width: 22px; min-height: 1px; border-radius: 3px 3px 0 0; }
-.barchart .bar.navy { background: var(--navy); }
-.barchart .bar.green { background: var(--green); }
-.barchart .col:hover .bar { opacity: 0.8; }
-.barchart .tick { font-size: 10.5px; color: var(--muted); text-align: center; padding-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+/* ---------- Trend chart ---------- */
+.chart { position: relative; margin: 0 0 20px; }
+.chart figcaption { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 14px; }
+.chart figcaption h2 { margin: 0; }
+.legend { display: flex; gap: 18px; list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--text); }
+.legend li { display: flex; align-items: center; gap: 7px; }
+.key { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.series-1 { background: var(--series-1); }
+.series-2 { background: var(--series-2); }
 
-.meter { display: inline-block; width: 70px; height: 7px; background: #EDEFF3; border-radius: 4px; margin-right: 8px; vertical-align: middle; overflow: hidden; }
-.meter span { display: block; height: 100%; background: var(--orange); }
+/* Plot height includes the x-axis band, so nothing scrolls inside the card. */
+.plot { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; height: 250px; }
+.y-axis { position: relative; height: calc(100% - 22px); min-width: 52px; }
+.y-axis span { position: absolute; right: 0; transform: translateY(50%); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plot-area { position: relative; height: calc(100% - 22px); }
+.gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--gridline); }
+.gridline:first-child { background: var(--axis); }
+.columns { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+.col { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 100%; cursor: default; }
+.col:hover, .col.active { background: rgba(31, 56, 100, 0.05); }
+.col:focus-visible { outline-offset: -2px; }
+/* Thin bars with a 4px rounded data end, square on the baseline; 2px gap between the pair. */
+.bar { width: min(40%, 18px); border-radius: 4px 4px 0 0; }
+.bar[style*="height: 0.00%"] { visibility: hidden; }
+.tick { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.chart-tooltip { position: absolute; z-index: 5; pointer-events: none; min-width: 190px; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 14px rgba(20, 30, 60, 0.12); padding: 9px 12px; font-size: 13px; }
+.tip-head { color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+.tip-head::first-letter { text-transform: uppercase; }
+.tip-row { display: flex; align-items: center; gap: 8px; line-height: 1.7; }
+.tip-row strong { font-variant-numeric: tabular-nums; color: var(--text); }
+.tip-row span { color: var(--muted); }
+.line-key { width: 12px; height: 3px; border-radius: 2px; }
+.tip-row:last-child { padding-left: 20px; }
+
+.table-view { margin-top: 30px; font-size: 13.5px; }
+.table-view summary { cursor: pointer; color: var(--navy); font-weight: 600; width: fit-content; }
+.table-view table { margin-top: 10px; }
+
+/* Meter: the unfilled track is a lighter step of the fill's hue. */
+.meter { display: inline-block; width: 70px; height: 8px; background: var(--track); border-radius: 4px; margin-right: 8px; vertical-align: middle; overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; }
+
+/* Wide tables scroll inside their card on small screens instead of stretching the page. */
+.card { overflow-x: auto; }
+.chart { overflow: visible; }
+/* Grid cells may shrink below their content's width (tables then scroll inside their card). */
+.grid > * { min-width: 0; }
+@media (max-width: 640px) {
+  .topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+  nav.mainnav { order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; }
+  nav.mainnav a { white-space: nowrap; }
+  .container { padding: 16px; }
+  .page-header h1 { font-size: 21px; }
+  .plot { height: 220px; }
+  .y-axis { min-width: 44px; }
+  .period-form .field, .date-select { min-width: 0; width: 100%; }
+  .date-parts select { flex: 1; }
+}
 
 footer.appfooter {
   text-align: center; color: var(--muted); font-size: 12.5px; padding: 24px; margin-top: 20px;

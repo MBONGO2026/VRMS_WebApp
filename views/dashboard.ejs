@@ -12,7 +12,7 @@
     <div class="label"><%= t('dashboard.statToday') %></div>
   </div>
   <div class="stat" style="border-left-color:#1F3864">
-    <div class="value"><%= utilization %>%</div>
+    <div class="value"><%= fmtPct(Number(utilization) / 100) %></div>
     <div class="label"><%= t('dashboard.statUtilization', { rented: fleet.rented, total: fleet.total }) %></div>
   </div>
   <div class="stat" style="border-left-color:<%= overdueCount > 0 ? '#B02A2A' : '#1E7E34' %>">

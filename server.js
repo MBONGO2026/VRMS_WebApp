@@ -57,6 +57,9 @@ app.use((req, res, next) => {
   res.locals.t = t;
   res.locals.statusLabel = (group, value) => statusLabel(lang, group, value);
   res.locals.dateLocale = lang === 'en' ? 'en-US' : 'fr-FR';
+  // Ratio (0..1) as a localized percentage: "20.7%" in English, "20,7 %" in French.
+  const pctFormat = new Intl.NumberFormat(res.locals.dateLocale, { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  res.locals.fmtPct = (ratio) => (ratio == null || Number.isNaN(Number(ratio)) ? '—' : pctFormat.format(Number(ratio)));
   // Language links keep the rest of the query string (e.g. the selected report period).
   res.locals.langHref = (target) => {
     const params = new URLSearchParams(req.query);
