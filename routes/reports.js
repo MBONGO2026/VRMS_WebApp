@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { buildExcelReport, buildPeriodExcelReport } = require('../lib/excelReport');
+const { buildOverviewPdf, buildPeriodPdf } = require('../lib/pdfReport');
 const { resolvePeriod, submittedInput } = require('../lib/period');
 const { loadPeriodData, firstActivityYear } = require('../lib/periodReport');
 
@@ -39,15 +40,28 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/export.xlsx', async (req, res, next) => {
+// Every report can be downloaded as Excel or PDF; both builders take the same data.
+const EXPORTS = {
+  xlsx: {
+    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    overview: buildExcelReport, period: buildPeriodExcelReport,
+  },
+  pdf: { contentType: 'application/pdf', overview: buildOverviewPdf, period: buildPeriodPdf },
+};
+
+function sendFile(res, format, fileBase, buffer) {
+  res.setHeader('Content-Type', EXPORTS[format].contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${fileBase}.${format}"`);
+  res.send(buffer);
+}
+
+router.get('/export.:format(xlsx|pdf)', async (req, res, next) => {
   try {
+    const { format } = req.params;
     const data = await loadReportData();
     const now = new Date();
-    const buffer = await buildExcelReport(data, { t: req.t, lang: req.lang, generatedAt: now });
-    const fileName = `${req.t('xlsx.fileName')}_${now.toISOString().slice(0, 10)}.xlsx`;
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.send(buffer);
+    const buffer = await EXPORTS[format].overview(data, { t: req.t, lang: req.lang, generatedAt: now });
+    sendFile(res, format, `${req.t('xlsx.fileName')}_${now.toISOString().slice(0, 10)}`, buffer);
   } catch (err) { next(err); }
 });
 
@@ -72,8 +86,9 @@ router.get('/period', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/period/export.xlsx', async (req, res, next) => {
+router.get('/period/export.:format(xlsx|pdf)', async (req, res, next) => {
   try {
+    const { format } = req.params;
     let period;
     try {
       period = resolvePeriod(req.query, res.locals.dateLocale);
@@ -83,17 +98,14 @@ router.get('/period/export.xlsx', async (req, res, next) => {
     }
     const data = await loadPeriodData(period);
     const now = new Date();
-    const buffer = await buildPeriodExcelReport(data, period, { t: req.t, lang: req.lang, generatedAt: now });
+    const buffer = await EXPORTS[format].period(data, period, { t: req.t, lang: req.lang, generatedAt: now });
     const suffix = {
       daily: period.from,
       monthly: period.from.slice(0, 7),
       annual: period.from.slice(0, 4),
       custom: `${period.from}_${period.to}`,
     }[period.type];
-    const fileName = `${req.t(`period.fileName.${period.type}`)}_${suffix}.xlsx`;
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.send(buffer);
+    sendFile(res, format, `${req.t(`period.fileName.${period.type}`)}_${suffix}`, buffer);
   } catch (err) { next(err); }
 });
 

@@ -269,7 +269,7 @@ const dict = {
 
   // ---------- Period reports (daily / monthly / annual / custom) ----------
   'period.title': { fr: 'Rapports par période', en: 'Period reports' },
-  'period.subtitle': { fr: 'Rapports journaliers, mensuels, annuels ou sur une période précise, exportables en Excel', en: 'Daily, monthly, annual or custom-range reports, exportable to Excel' },
+  'period.subtitle': { fr: 'Rapports journaliers, mensuels, annuels ou sur une période précise, exportables en Excel et en PDF', en: 'Daily, monthly, annual or custom-range reports, exportable to Excel and PDF' },
   'period.tab.overview': { fr: "Vue d'ensemble", en: 'Overview' },
   'period.type.daily': { fr: 'Journalier', en: 'Daily' },
   'period.type.monthly': { fr: 'Mensuel', en: 'Monthly' },
@@ -287,6 +287,8 @@ const dict = {
   'period.current.monthly': { fr: 'Ce mois-ci', en: 'This month' },
   'period.current.annual': { fr: 'Cette année', en: 'This year' },
   'period.range': { fr: 'du {{from}} au {{to}} · {{n}} jours', en: '{{from}} to {{to}} · {{n}} days' },
+  'pdf.export': { fr: '⬇ Exporter en PDF', en: '⬇ Export to PDF' },
+  'pdf.page': { fr: 'Page {{n}} / {{total}}', en: 'Page {{n}} of {{total}}' },
   'period.days': { fr: '{{n}} jours', en: '{{n}} days' },
   'period.exportExcel': { fr: '⬇ Exporter ce rapport en Excel', en: '⬇ Export this report to Excel' },
   'period.errInvalidDate': { fr: 'Date invalide. Vérifiez la période sélectionnée.', en: 'Invalid date. Please check the selected period.' },

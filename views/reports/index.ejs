@@ -3,7 +3,10 @@
     <h1><%= t('reports.title') %></h1>
     <p class="subtitle"><%= t('reports.subtitle') %></p>
   </div>
-  <a href="/reports/export.xlsx" class="btn"><%= t('reports.exportExcel') %></a>
+  <div class="export-buttons">
+    <a href="/reports/export.xlsx" class="btn"><%= t('reports.exportExcel') %></a>
+    <a href="/reports/export.pdf" class="btn secondary"><%= t('pdf.export') %></a>
+  </div>
 </div>
 
 <%- include('_tabs', { active: 'overview' }) %>

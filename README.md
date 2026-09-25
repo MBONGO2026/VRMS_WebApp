@@ -47,7 +47,7 @@ The full rental lifecycle has been tested end to end:
 
 ![Excel BI dashboard](docs/app/excel_dashboard.png)
 
-**Period reports:** daily, monthly, annual or custom date range (from dd/mm/yyyy to dd/mm/yyyy), each exportable to Excel
+**Period reports:** daily, monthly, annual or custom date range (from dd/mm/yyyy to dd/mm/yyyy), each exportable to Excel and PDF
 
 ![Period report](docs/app/period_report.png)
 
@@ -55,6 +55,13 @@ The full rental lifecycle has been tested end to end:
 <summary><b>Excel export of a monthly report</b> (KPIs, day-by-day trend, revenue, utilisation, branches)</summary>
 
 ![Excel monthly report](docs/app/excel_period_report.png)
+
+</details>
+
+<details>
+<summary><b>PDF export of a monthly report</b> (A4, first page)</summary>
+
+![PDF monthly report](docs/app/pdf_period_report.png)
 
 </details>
 
@@ -80,6 +87,7 @@ The full rental lifecycle has been tested end to end:
 | **Reports** | Fleet utilisation, revenue by vehicle type, overdue returns, today's bookings, bookings per category, and outstanding customer balances. |
 | **Period reports** | **Daily**, **monthly**, **annual** or **custom-range** reports: bookings, rentals, returns, invoiced vs. received revenue, fleet utilisation, per-category and per-branch performance, with a trend chart and previous/next navigation. |
 | **Excel export** | One-click download of a BI workbook with KPI cards, native Excel charts, and filterable tables, for the overview and for every period report. |
+| **PDF export** | The same reports as a print-ready A4 PDF: KPI cards, charts, and detail tables with page numbers. |
 | **Bilingual UI** | Switch between English and French at any time; the choice is remembered. |
 
 ## Tech stack
@@ -89,6 +97,7 @@ The full rental lifecycle has been tested end to end:
 - **Templating:** EJS + `express-ejs-layouts`
 - **Database driver:** `pg` (connection pool)
 - **Excel generation:** `exceljs` + `jszip` (native chart injection)
+- **PDF generation:** `pdfkit` (server-side, no headless browser needed)
 - **Configuration:** `dotenv`
 
 ## Project structure
@@ -100,6 +109,7 @@ VRMS_WebApp/
 ├── i18n.js              # English / French translation dictionary and helpers
 ├── lib/
 │   ├── excelReport.js   # Builds the BI Excel workbooks (overview + period reports)
+│   ├── pdfReport.js     # Builds the PDF reports (overview + period reports)
 │   ├── xlsxCharts.js    # Injects native Excel charts into the workbook
 │   ├── period.js        # Parses daily / monthly / annual / custom periods into a date range
 │   └── periodReport.js  # SQL queries behind the period reports
@@ -258,8 +268,10 @@ A typical rental goes through these steps:
 | POST | `/agreements/:id/payment` | Record a payment |
 | GET | `/reports` | Reports page |
 | GET | `/reports/export.xlsx` | Download the Excel BI workbook |
+| GET | `/reports/export.pdf` | Download the overview as PDF |
 | GET | `/reports/period` | Period report (see parameters below) |
 | GET | `/reports/period/export.xlsx` | Download a period report as Excel (same parameters) |
+| GET | `/reports/period/export.pdf` | Download a period report as PDF (same parameters) |
 
 Period report parameters:
 
@@ -304,6 +316,10 @@ The **Export to Excel** button on the Reports page (`/reports/export.xlsx`) gene
 It uses the same queries as the Reports page, so the figures always match what you see on screen.
 
 ![Excel BI dashboard sheet](docs/app/excel_dashboard.png)
+
+### PDF export
+
+Next to each Excel button, **Export to PDF** (`/reports/export.pdf`, `/reports/period/export.pdf`) downloads the same report as an A4 PDF: banner, KPI cards, charts, then every detail table. Long tables continue on the next page with their header repeated, and each page has a footer with the period, the generation time and the page number. PDFs are drawn server-side with PDFKit, so no browser or extra software is needed on the server.
 
 ### Period reports
 

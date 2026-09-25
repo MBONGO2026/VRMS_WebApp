@@ -172,6 +172,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--orange); ou
 
 .section-tabs { flex-wrap: wrap; }
 
+.export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* ---------- Period reports ---------- */
 .period-form { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
 .period-form .field { min-width: 180px; }

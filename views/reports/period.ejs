@@ -16,7 +16,10 @@
     <p class="subtitle"><%= t('period.subtitle') %></p>
   </div>
   <% if (period) { %>
-    <a href="/reports/period/export.xlsx?<%= period.query %>" class="btn"><%= t('period.exportExcel') %></a>
+    <div class="export-buttons">
+      <a href="/reports/period/export.xlsx?<%= period.query %>" class="btn"><%= t('period.exportExcel') %></a>
+      <a href="/reports/period/export.pdf?<%= period.query %>" class="btn secondary"><%= t('pdf.export') %></a>
+    </div>
   <% } %>
 </div>
 
