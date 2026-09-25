@@ -8,7 +8,7 @@
 
 <div class="card">
   <% if (customers.length === 0) { %>
-    <p class="empty"><%= t('customers.list.none') %></p>
+    <div class="empty"><p><%= t('customers.list.none') %></p><a href="/customers/new" class="btn"><%= t('customers.list.new') %></a></div>
   <% } else { %>
   <div class="table-wrap">
     <table>

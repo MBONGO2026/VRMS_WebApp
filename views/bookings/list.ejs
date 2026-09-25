@@ -8,11 +8,11 @@
 
 <div class="card">
   <% if (bookings.length === 0) { %>
-    <p class="empty"><%= t('bookings.list.none') %></p>
+    <div class="empty"><p><%= t('bookings.list.none') %></p><a href="/bookings/new" class="btn"><%= t('bookings.list.new') %></a></div>
   <% } else { %>
   <div class="table-wrap">
     <table>
-      <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th><th><%= t('col.pickup') %></th><th><%= t('col.returnExpected') %></th><th><%= t('col.status') %></th><th></th></tr></thead>
+      <thead><tr><th><%= t('col.ref') %></th><th><%= t('col.customer') %></th><th><%= t('col.category') %></th><th><%= t('col.branch') %></th><th><%= t('col.pickup') %></th><th><%= t('col.returnExpected') %></th><th><%= t('col.status') %></th><th><span class="visually-hidden"><%= t('common.actions') %></span></th></tr></thead>
       <tbody>
         <% bookings.forEach(b => { %>
         <tr>
@@ -28,10 +28,12 @@
           </td>
           <td>
             <% if (b.bookingstatus === 'Requested') { %>
-              <a href="/bookings/<%= b.bookingid %>/confirm" class="btn small"><%= t('bookings.list.assignVehicle') %></a>
-              <form method="POST" action="/bookings/<%= b.bookingid %>/cancel" style="display:inline" onsubmit="return confirm('<%= t('bookings.list.confirmCancel') %>')">
-                <button type="submit" class="btn small danger"><%= t('bookings.list.cancelBtn') %></button>
-              </form>
+              <div class="row-actions">
+                <a href="/bookings/<%= b.bookingid %>/confirm" class="btn small"><%= t('bookings.list.assignVehicle') %></a>
+                <form method="POST" action="/bookings/<%= b.bookingid %>/cancel" data-confirm="<%= t('bookings.list.confirmCancel') %>">
+                  <button type="submit" class="btn small danger" aria-label="<%= t('bookings.list.cancelBtn') %> #<%= b.bookingid %>"><%= t('bookings.list.cancelBtn') %></button>
+                </form>
+              </div>
             <% } %>
           </td>
         </tr>
@@ -41,3 +43,10 @@
   </div>
   <% } %>
 </div>
+
+<script>
+  // Confirmation text comes from a data attribute, so quotes in translations cannot break the script.
+  document.querySelectorAll('form[data-confirm]').forEach(function (f) {
+    f.addEventListener('submit', function (e) { if (!window.confirm(f.dataset.confirm)) e.preventDefault(); });
+  });
+</script>

@@ -6,34 +6,34 @@
 </div>
 
 <div class="card">
-  <% if (error) { %><div class="flash error"><%= error %></div><% } %>
+  <% if (error) { %><div class="flash error" role="alert"><%= error %></div><% } %>
   <form class="stack" method="POST" action="/bookings">
     <div class="field">
-      <label><%= t('bookings.new.customer') %></label>
-      <select name="customerId" required>
+      <label for="customerId"><%= t('bookings.new.customer') %></label>
+      <select id="customerId" name="customerId" required aria-describedby="customerHint">
         <option value=""><%= t('common.select') %></option>
         <% customers.forEach(c => { %>
           <option value="<%= c.customerid %>" <%= String(form.customerId) === String(c.customerid) ? 'selected' : '' %>><%= c.name %> (#<%= c.customerid %>)</option>
         <% }) %>
       </select>
-      <div class="hint"><%= t('bookings.new.customerHintPrefix') %><a href="/customers/new"><%= t('bookings.new.customerHintLink') %></a>.</div>
+      <div class="hint" id="customerHint"><%= t('bookings.new.customerHintPrefix') %><a href="/customers/new"><%= t('bookings.new.customerHintLink') %></a>.</div>
     </div>
 
     <div class="form-row">
       <div class="field">
-        <label><%= t('bookings.new.category') %></label>
-        <select name="categoryId" required>
+        <label for="categoryId"><%= t('bookings.new.category') %></label>
+        <select id="categoryId" name="categoryId" required>
           <option value=""><%= t('common.select') %></option>
           <% categories.forEach(cat => { %>
             <option value="<%= cat.categoryid %>" <%= String(form.categoryId) === String(cat.categoryid) ? 'selected' : '' %>>
-              <%= cat.categoryname %> — N$<%= cat.dailyrate %><%= t('common.perDay') %> (<%= t('common.deposit') %> N$<%= cat.depositamount %>)
+              <%= cat.categoryname %> : <%= fmtMoney(cat.dailyrate) %><%= t('common.perDay') %> (<%= t('common.deposit') %> <%= fmtMoney(cat.depositamount) %>)
             </option>
           <% }) %>
         </select>
       </div>
       <div class="field">
-        <label><%= t('bookings.new.branch') %></label>
-        <select name="branchId" required>
+        <label for="branchId"><%= t('bookings.new.branch') %></label>
+        <select id="branchId" name="branchId" required>
           <option value=""><%= t('common.select') %></option>
           <% branches.forEach(br => { %>
             <option value="<%= br.branchid %>" <%= String(form.branchId) === String(br.branchid) ? 'selected' : '' %>><%= br.branchname %></option>
@@ -44,18 +44,32 @@
 
     <div class="form-row">
       <div class="field">
-        <label><%= t('bookings.new.pickupDate') %></label>
-        <input type="date" name="pickupDate" required value="<%= form.pickupDate || '' %>">
+        <label for="pickupDate"><%= t('bookings.new.pickupDate') %></label>
+        <input type="date" id="pickupDate" name="pickupDate" required value="<%= form.pickupDate || '' %>">
       </div>
       <div class="field">
-        <label><%= t('bookings.new.returnDate') %></label>
-        <input type="date" name="returnDate" required value="<%= form.returnDate || '' %>">
+        <label for="returnDate"><%= t('bookings.new.returnDate') %></label>
+        <input type="date" id="returnDate" name="returnDate" required aria-describedby="returnHint" value="<%= form.returnDate || '' %>">
+        <div class="hint" id="returnHint"><%= t('bookings.new.returnHint') %></div>
       </div>
     </div>
 
-    <div>
+    <div class="form-actions">
       <button type="submit" class="btn"><%= t('bookings.new.create') %></button>
       <a href="/bookings" class="btn ghost"><%= t('common.cancel') %></a>
     </div>
   </form>
 </div>
+
+<script>
+  // The return date must come after the pickup date (the database enforces it too).
+  (function () {
+    var pickup = document.getElementById('pickupDate'), ret = document.getElementById('returnDate');
+    function sync() {
+      if (!pickup.value) { ret.removeAttribute('min'); return; }
+      var d = new Date(pickup.value + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1);
+      ret.min = d.toISOString().slice(0, 10);
+    }
+    pickup.addEventListener('change', sync); sync();
+  })();
+</script>

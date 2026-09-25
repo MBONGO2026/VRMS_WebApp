@@ -59,6 +59,9 @@ app.use((req, res, next) => {
   res.locals.dateLocale = lang === 'en' ? 'en-US' : 'fr-FR';
   // Ratio (0..1) as a localized percentage: "20.7%" in English, "20,7 %" in French.
   const pctFormat = new Intl.NumberFormat(res.locals.dateLocale, { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  // Amounts in Namibian dollars, always with two decimals and localized separators.
+  const moneyFormat = new Intl.NumberFormat(res.locals.dateLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  res.locals.fmtMoney = (v) => `N$ ${moneyFormat.format(Number(v) || 0)}`;
   res.locals.fmtPct = (ratio) => (ratio == null || Number.isNaN(Number(ratio)) ? '—' : pctFormat.format(Number(ratio)));
   // Language links keep the rest of the query string (e.g. the selected report period).
   res.locals.langHref = (target) => {

@@ -7,31 +7,30 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+  <a class="skip-link" href="#main"><%= t('nav.skipToContent') %></a>
   <header class="topbar">
     <div class="brand">
       <strong>SwiftDrive VRMS</strong>
       <span><%= t('app.tagline') %></span>
     </div>
-    <nav class="mainnav">
-      <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>"><%= t('nav.dashboard') %></a>
-      <a href="/customers" class="<%= currentPath.startsWith('/customers') ? 'active' : '' %>"><%= t('nav.customers') %></a>
-      <a href="/vehicles" class="<%= currentPath.startsWith('/vehicles') ? 'active' : '' %>"><%= t('nav.vehicles') %></a>
-      <a href="/bookings" class="<%= currentPath.startsWith('/bookings') ? 'active' : '' %>"><%= t('nav.bookings') %></a>
-      <a href="/agreements" class="<%= currentPath.startsWith('/agreements') ? 'active' : '' %>"><%= t('nav.agreements') %></a>
-      <a href="/reports" class="<%= currentPath.startsWith('/reports') ? 'active' : '' %>"><%= t('nav.reports') %></a>
+    <nav class="mainnav" aria-label="<%= t('nav.main') %>">
+      <% [['/', 'nav.dashboard'], ['/customers', 'nav.customers'], ['/vehicles', 'nav.vehicles'], ['/bookings', 'nav.bookings'], ['/agreements', 'nav.agreements'], ['/reports', 'nav.reports']].forEach(([href, key]) => {
+           const active = href === '/' ? currentPath === '/' : currentPath.startsWith(href); %>
+        <a href="<%= href %>" class="<%= active ? 'active' : '' %>"<%- active ? ' aria-current="page"' : '' %>><%= t(key) %></a>
+      <% }) %>
     </nav>
-    <div class="langswitch">
-      <a href="<%= langHref('fr') %>" class="<%= lang === 'fr' ? 'active' : '' %>">FR</a>
-      <a href="<%= langHref('en') %>" class="<%= lang === 'en' ? 'active' : '' %>">EN</a>
+    <div class="langswitch" role="group" aria-label="<%= t('nav.language') %>">
+      <a href="<%= langHref('fr') %>" lang="fr" class="<%= lang === 'fr' ? 'active' : '' %>"<%- lang === 'fr' ? ' aria-current="true"' : '' %>>FR</a>
+      <a href="<%= langHref('en') %>" lang="en" class="<%= lang === 'en' ? 'active' : '' %>"<%- lang === 'en' ? ' aria-current="true"' : '' %>>EN</a>
     </div>
   </header>
 
-  <div class="container">
+  <main class="container" id="main" tabindex="-1">
     <% if (typeof flash !== 'undefined' && flash) { %>
-      <div class="flash <%= flashType %>"><%= flash %></div>
+      <div class="flash <%= flashType %>" role="<%= flashType === 'error' ? 'alert' : 'status' %>"><%= flash %></div>
     <% } %>
     <%- body %>
-  </div>
+  </main>
 
   <footer class="appfooter">
     <%= t('app.footer') %>

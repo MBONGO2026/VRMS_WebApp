@@ -1,27 +1,28 @@
 <div class="page-header">
   <div>
-    <h1><%= t('agreements.return.title') %> — <%= t('agreements.list.colAgreement') %> #<%= agreement.agreementid %></h1>
-    <p class="subtitle"><%= agreement.customername %> — <%= agreement.registrationnumber %></p>
+    <h1><%= t('agreements.return.titleFor', { id: agreement.agreementid }) %></h1>
+    <p class="subtitle"><%= t('common.customerVehicle', { customer: agreement.customername, vehicle: agreement.registrationnumber }) %></p>
   </div>
 </div>
 
 <div class="card">
-  <% if (error) { %><div class="flash error"><%= error %></div><% } %>
-  <div class="kv" style="margin-bottom:18px;">
+  <% if (error) { %><div class="flash error" role="alert"><%= error %></div><% } %>
+  <dl class="kv" style="margin: 0 0 18px;">
     <dt><%= t('agreements.return.checkedOutOn') %></dt><dd><%= new Date(agreement.actualpickupdate).toLocaleDateString(dateLocale) %></dd>
     <dt><%= t('agreements.return.odometerOut') %></dt><dd><%= Number(agreement.odometerout).toLocaleString(dateLocale) %> <%= t('common.km') %></dd>
     <dt><%= t('agreements.return.odometerCurrent') %></dt><dd><%= Number(agreement.currentodometer).toLocaleString(dateLocale) %> <%= t('common.km') %></dd>
-  </div>
+  </dl>
 
   <form class="stack" method="POST" action="/agreements/<%= agreement.agreementid %>/return">
     <div class="form-row">
       <div class="field">
-        <label><%= t('agreements.return.returnDate') %></label>
-        <input type="date" name="returnDate" required value="<%= new Date().toISOString().slice(0,10) %>">
+        <label for="returnDate"><%= t('agreements.return.returnDate') %></label>
+        <input type="date" id="returnDate" name="returnDate" required value="<%= new Date().toISOString().slice(0,10) %>">
       </div>
       <div class="field">
-        <label><%= t('agreements.return.odometerIn') %></label>
-        <input type="number" name="odometerIn" required min="<%= agreement.odometerout %>">
+        <label for="odometerIn"><%= t('agreements.return.odometerIn') %></label>
+        <input type="number" id="odometerIn" name="odometerIn" required inputmode="numeric" min="<%= agreement.odometerout %>" aria-describedby="odoHint">
+        <div class="hint" id="odoHint"><%= t('agreements.return.odometerHint', { km: Number(agreement.odometerout).toLocaleString(dateLocale) }) %></div>
       </div>
     </div>
     <div class="field inline">
@@ -29,10 +30,10 @@
       <label for="damageFound" style="margin:0"><%= t('agreements.return.damageFound') %></label>
     </div>
     <div class="field">
-      <label><%= t('agreements.return.notes') %></label>
-      <textarea name="conditionNotes" rows="3" placeholder="<%= t('agreements.return.notesPlaceholder') %>"></textarea>
+      <label for="conditionNotes"><%= t('agreements.return.notes') %></label>
+      <textarea id="conditionNotes" name="conditionNotes" rows="3" placeholder="<%= t('agreements.return.notesPlaceholder') %>"></textarea>
     </div>
-    <div>
+    <div class="form-actions">
       <button type="submit" class="btn"><%= t('agreements.return.save') %></button>
       <a href="/agreements" class="btn ghost"><%= t('common.cancel') %></a>
     </div>

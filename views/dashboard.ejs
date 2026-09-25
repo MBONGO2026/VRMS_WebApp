@@ -11,16 +11,17 @@
     <div class="value"><%= todayCount %></div>
     <div class="label"><%= t('dashboard.statToday') %></div>
   </div>
-  <div class="stat" style="border-left-color:#1F3864">
+  <div class="stat">
     <div class="value"><%= fmtPct(Number(utilization) / 100) %></div>
     <div class="label"><%= t('dashboard.statUtilization', { rented: fleet.rented, total: fleet.total }) %></div>
   </div>
-  <div class="stat" style="border-left-color:<%= overdueCount > 0 ? '#B02A2A' : '#1E7E34' %>">
+  <div class="stat">
     <div class="value"><%= overdueCount %></div>
     <div class="label"><%= t('dashboard.statOverdue') %></div>
+    <% if (overdueCount > 0) { %><a class="caption-link" href="/agreements"><%= t('dashboard.overdueAction') %></a><% } %>
   </div>
-  <div class="stat" style="border-left-color:#B8860B">
-    <div class="value">N$ <%= Number(outstanding).toLocaleString(dateLocale, {minimumFractionDigits: 2}) %></div>
+  <div class="stat">
+    <div class="value"><%= fmtMoney(outstanding) %></div>
     <div class="label"><%= t('dashboard.statOutstanding') %></div>
   </div>
 </div>
@@ -28,29 +29,40 @@
 <div class="grid cols-2">
   <div class="card">
     <h2><%= t('dashboard.quickActions') %></h2>
-    <p style="display:flex; flex-direction:column; gap:10px;">
+    <div class="action-list">
       <a href="/customers/new" class="btn secondary"><%= t('dashboard.actionRegisterCustomer') %></a>
       <a href="/bookings/new" class="btn"><%= t('dashboard.actionCreateBooking') %></a>
       <a href="/bookings" class="btn ghost"><%= t('dashboard.actionConfirmAssign') %></a>
       <a href="/agreements" class="btn ghost"><%= t('dashboard.actionProcessReturn') %></a>
-    </p>
+    </div>
   </div>
   <div class="card">
     <h2><%= t('dashboard.fleetState') %></h2>
-    <div class="kv">
-      <dt><%= t('dashboard.fleetTotal') %></dt><dd><%= fleet.total %></dd>
-      <dt><%= t('dashboard.fleetRentedNow') %></dt><dd><%= fleet.rented %></dd>
-      <dt><%= t('dashboard.fleetAvailable') %></dt><dd><%= fleet.available %></dd>
-      <dt><%= t('dashboard.fleetMaintenance') %></dt><dd><%= fleet.maintenance %></dd>
+    <%
+      // Part-to-whole: one stacked bar, each segment keyed in the legend with its count.
+      const parts = [
+        { key: 'dashboard.fleetRentedNow', n: fleet.rented, cls: 'series-1' },
+        { key: 'dashboard.fleetAvailable', n: fleet.available, cls: 'series-2' },
+        { key: 'dashboard.fleetMaintenance', n: fleet.maintenance, cls: 'series-3' },
+      ];
+    %>
+    <p class="fleet-total"><%= t('dashboard.fleetTotalCount', { n: fleet.total }) %></p>
+    <div class="partbar" role="img" aria-label="<%= parts.map((p) => `${t(p.key)} ${p.n}`).join(', ') %>">
+      <% parts.filter((p) => p.n > 0).forEach((p) => { %><span class="<%= p.cls %>" style="flex-grow: <%= p.n %>"></span><% }) %>
     </div>
-    <p style="margin-top:14px;"><a href="/reports#fleet" class="btn ghost small"><%= t('dashboard.viewFullReport') %></a></p>
+    <ul class="legend partbar-legend">
+      <% parts.forEach((p) => { %>
+        <li><i class="key <%= p.cls %>"></i><%= t(p.key) %> <strong><%= p.n %></strong> <span class="muted">(<%= fmtPct(fleet.total ? p.n / fleet.total : 0) %>)</span></li>
+      <% }) %>
+    </ul>
+    <p style="margin-top:16px;"><a href="/reports#fleet" class="btn ghost small"><%= t('dashboard.viewFullReport') %></a></p>
   </div>
 </div>
 
 <div class="card">
   <h2><%= t('dashboard.recentBookings') %></h2>
   <% if (recentBookings.length === 0) { %>
-    <p class="empty"><%= t('dashboard.noBookings') %></p>
+    <div class="empty"><p><%= t('dashboard.noBookings') %></p><a href="/bookings/new" class="btn"><%= t('dashboard.actionCreateBooking') %></a></div>
   <% } else { %>
   <div class="table-wrap">
     <table>

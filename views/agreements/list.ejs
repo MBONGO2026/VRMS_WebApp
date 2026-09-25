@@ -11,7 +11,7 @@
   <% } else { %>
   <div class="table-wrap">
     <table>
-      <thead><tr><th><%= t('agreements.list.colAgreement') %></th><th><%= t('col.customer') %></th><th><%= t('agreements.list.colVehicle') %></th><th><%= t('agreements.list.colCheckedOut') %></th><th><%= t('col.returnExpected') %></th><th><%= t('agreements.list.colReturnedOn') %></th><th><%= t('col.status') %></th><th><%= t('agreements.list.colInvoice') %></th><th></th></tr></thead>
+      <thead><tr><th><%= t('agreements.list.colAgreement') %></th><th><%= t('col.customer') %></th><th><%= t('agreements.list.colVehicle') %></th><th><%= t('agreements.list.colCheckedOut') %></th><th><%= t('col.returnExpected') %></th><th><%= t('agreements.list.colReturnedOn') %></th><th><%= t('col.status') %></th><th><%= t('agreements.list.colInvoice') %></th><th><span class="visually-hidden"><%= t('common.actions') %></span></th></tr></thead>
       <tbody>
         <% agreements.forEach(a => { %>
         <tr>
@@ -29,7 +29,7 @@
           <td>
             <% if (a.invoiceid) { %>
               <% const ic = { Paid: 'green', PartiallyPaid: 'amber', Unpaid: 'red' }[a.invoicestatus] || 'grey'; %>
-              <span class="badge <%= ic %>">#<%= a.invoiceid %> — <%= statusLabel('invoice', a.invoicestatus) %></span>
+              <span class="badge <%= ic %>">#<%= a.invoiceid %> · <%= statusLabel('invoice', a.invoicestatus) %></span>
             <% } else { %>
               <span class="badge grey"><%= t('common.none') %></span>
             <% } %>
